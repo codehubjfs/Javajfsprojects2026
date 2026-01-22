@@ -1,25 +1,31 @@
 package com.ems.menu;
 
-import com.ems.dao.impl.*;
-import com.ems.dao.*;
 import com.ems.model.User;
 import com.ems.service.AdminService;
 import com.ems.service.EventService;
 import com.ems.service.NotificationService;
-import com.ems.service.UserService;
 import com.ems.util.InputValidationUtil;
 import com.ems.util.ScannerUtil;
+import com.ems.util.ApplicationUtil;
 
-public class AdminMenu {
-	User loggedInUser;
-	public AdminMenu(User user){
-		this.loggedInUser = user;
-		this.start();
+public class AdminMenu extends BaseMenu {
+
+	private final AdminService adminService;
+	private final EventService eventService;
+	private final NotificationService notificationService;
+	
+		
+	public AdminMenu(User user) {
+	    super(user);
+	    this.notificationService = ApplicationUtil.notificationService();
+	    this.adminService = ApplicationUtil.adminService();
+	    this.eventService = ApplicationUtil.eventService();
 	}
 
-	private void start() {
-		NotificationDao notificationDao = new NotificationDaoImpl();
+
+	public void start() {
 		while (true) {
+			adminService.markCompletedEvents();
 		    System.out.println("\nAdmin Menu\n"
 		    		+ "1. User Management\n"
 		    		+ "2. Event Management\n"
@@ -44,8 +50,12 @@ public class AdminMenu {
 		        	notificationMenu();
 		        	break;
 		        case 5 :
-		            System.out.println("Logging out...");
-		            return;
+		        	adminService.markCompletedEvents();
+		            if (confirmLogout()) {
+		            	System.out.println("Logging out...");
+	                    return;
+	                }
+	                break;
 		        default :
 		        	System.out.println("Invalid option");
 		        	break;
@@ -66,16 +76,16 @@ public class AdminMenu {
 
 	        switch (choice) {
 	            case 1 : 
-	            	AdminService.getUsersList("Attendee");
+	            	adminService.getUsersList("Attendee");
 	            	break;
 	            case 2 : 
-	            	AdminService.getUsersList("Organizer");
+	            	adminService.getUsersList("Organizer");
 	            	break;
 	            case 3 : 
-	            	AdminService.changeStatus("ACTIVE");
+	            	adminService.changeStatus("ACTIVE");
 	            	break;
 	            case 4 : 
-	            	AdminService.changeStatus("SUSPENDED");
+	            	adminService.changeStatus("SUSPENDED");
 	            	break;
 	            case 5 : 
 	            	return; 
@@ -98,18 +108,18 @@ public class AdminMenu {
 
 	        switch (choice) {
 	            case 1 :
-	            	EventService.printAllEvents();
+	            	eventService.printAllEvents();
 	            	break;
 	            case 2 :
 					try {
-						AdminService.approveEvents();
+						adminService.approveEvents(loggedInUser.getUserId());
 					} catch (Exception e) {
 						System.out.println("Unexpected error occured: " + e.getMessage());
 					}
 					break;
 	            case 3 :
 					try {
-						AdminService.cancelEvents();
+						adminService.cancelEvents();
 					} catch (Exception e) {
 						System.out.println("Unexpected error occured: " + e.getMessage());
 					}
@@ -134,16 +144,13 @@ public class AdminMenu {
 
 	        switch (choice) {
 	            case 1 :
-	                int eventId = InputValidationUtil.readInt(
-	                    ScannerUtil.getScanner(), "Enter event id: "
-	                );
-	                AdminService.getEventWiseRegistrations(eventId);
+	                adminService.getEventWiseRegistrations();
 	                break;
 	            case 2 :
-	            	AdminService.getOrganizerWisePerformance();
+	            	adminService.getOrganizerWisePerformance();
 	            	break;
 	            case 3 :
-	            	AdminService.getRevenueReport();
+	            	adminService.getRevenueReport();
 	            	break;
 	            case 4 :
 	            	return; 
@@ -156,37 +163,61 @@ public class AdminMenu {
 	private void notificationMenu() {
 	    while (true) {
 	        System.out.println("\nNotifications\n"
-	        		+ "1. Send system update\n"
-	        		+ "2. Send promotional message\n"
-	        		+ "3. Back"
-	        		+ "\n>");
+	                + "1. Send system update (all users)\n"
+	                + "2. Send promotional message (all users)\n"
+	                + "3. Send notification to user role\n"
+	                + "4. Send notification to specific user\n"
+	                + "5. View my notifications\n"
+	                + "6. Back"
+	                + "\n>");
 
 	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "");
 
 	        switch (choice) {
-	            case 1 :
+	            case 1:
 	                String msg = InputValidationUtil.readString(
-	                    ScannerUtil.getScanner(), "Enter system message: "
+	                        ScannerUtil.getScanner(), "Enter system message: "
 	                );
-	                AdminService.sendSystemWideNotification(msg, "SYSTEM");
+	                adminService.sendSystemWideNotification(msg, "SYSTEM");
 	                break;
-	            
-	            case 2 :
+
+	            case 2:
 	                String msg1 = InputValidationUtil.readString(
-	                    ScannerUtil.getScanner(), "Enter promo message: "
+	                        ScannerUtil.getScanner(), "Enter promo message: "
 	                );
-	                AdminService.sendSystemWideNotification(msg1, "PROMOTION");
+	                adminService.sendSystemWideNotification(msg1, "PROMOTION");
 	                break;
-	            
-	            case 3 : 
-	            	return; 
-	            default : 
-	            	System.out.println("Invalid option"); 
-	            	break;
+
+	            case 3:
+	            	adminService.sendNotificationByRole();
+	                break;
+
+	            case 4:
+	            	adminService.getAllUsers();
+	            	adminService.sendNotificationToUser();
+	                break;
+
+	            case 5:
+	            	notificationService.displayAllNotifications(
+	                    loggedInUser.getUserId()
+	                );
+	                break;
+	            case 6:
+	                return;
+
+	            default:
+	                System.out.println("Invalid option");
 	        }
 	    }
 	}
 
+	private boolean confirmLogout() {
+	    char choice = InputValidationUtil.readChar(
+	        ScannerUtil.getScanner(),
+	        "Are you sure to logout (Y/N): "
+	    );
+	    return Character.toUpperCase(choice) == 'Y';
+	}
 
 
 }

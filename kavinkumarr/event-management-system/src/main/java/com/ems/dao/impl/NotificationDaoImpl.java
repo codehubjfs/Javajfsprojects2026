@@ -4,7 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +41,7 @@ public class NotificationDaoImpl implements NotificationDao {
 	@Override
 	public List<Notification> getUnreadNotifications(int userId) {
 		List<Notification> notifications = new ArrayList<>();
-		String sql = "select * from notifications where user_id = ? and read_status = 0 order by created_at desc";
+		String sql = "select * from notifications where user_id = ? and read_status = FALSE order by created_at desc";
 		try(Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
 			ps.setInt(1, userId);
@@ -138,15 +140,39 @@ public class NotificationDaoImpl implements NotificationDao {
 	
 	//helps to send the notification to particular user
 	@Override
-	public void sendNotification(int organizerId, String message, String notificationType) {
+	public void sendNotification(int userId, String message, String notificationType) {
 		String sql = "insert into notifications (user_id, message, type,"
-				+ " created_at, read_status) ?"
-				+ ", ? , ?, NOW(), false";
+				+ " created_at, read_status) values (?"
+				+ ", ? , ?, ?, ?)";
 		try (Connection con = DBConnectionUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)) {
-			ps.setInt(1, organizerId);
-			ps.setString(1, message);
+			ps.setInt(1, userId);
+			ps.setString(2, message);
 			ps.setString(3, notificationType);
+			ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+			ps.setBoolean(5, false);
+			int affectedRows = ps.executeUpdate();
+			if(affectedRows == 0) {
+				System.out.println("No user found with the user id: " + userId);
+			}
+		} catch (SQLException e) {
+		        System.out.println("Database error while sending system notification: " + e.getMessage());
+		} catch (Exception e) {
+		        System.out.println("Unexpected error while sending system notification: " + e.getMessage());
+		}
+	}
+
+	@Override
+	public void sendNotificationByRole(String message, String notificationType, String role) {
+		String sql = "insert into notifications (user_id, message, type,created_at, read_status) "
+				+ "select u.user_id, ? , ?, NOW(), false from users u "
+				+ "inner join roles r on u.role_id = r.role_id "
+				+ "where u.status = 'ACTIVE' and role_name = ?";
+		try (Connection con = DBConnectionUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)) {
+			ps.setString(1, message);
+			ps.setString(2, notificationType);
+			ps.setString(3, role.toUpperCase());
 			ps.executeUpdate();
 		} catch (SQLException e) {
 		        System.out.println("Database error while sending system notification: " + e.getMessage());
@@ -154,6 +180,8 @@ public class NotificationDaoImpl implements NotificationDao {
 		        System.out.println("Unexpected error while sending system notification: " + e.getMessage());
 		}
 	}
+
+	
 	
 
 }
