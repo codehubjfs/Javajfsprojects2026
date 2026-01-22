@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.recharge.config.DBConnection;
 import com.recharge.model.RechargeTransaction;
@@ -67,5 +69,30 @@ public class RechargeTransactionDAO {
 			throw new RuntimeException("Error updating recharge status", e);
 		}
 		
+	}
+	
+	public List<String> findAllTransactions(){
+		
+		List<String> list = new ArrayList<>();
+		
+		String sql = """
+					select recharge_id, user_id, final_amount, status, initiated_at
+					from recharge_transaction order by recharge_id desc
+					 """;
+		
+		try {
+	        Connection conn = DBConnection.getConnection();
+	        PreparedStatement ps = conn.prepareStatement(sql);
+	        ResultSet rs = ps.executeQuery();
+	        
+	        while(rs.next()) {
+	        	list.add(rs.getInt("recharge_id") + " | User " + rs.getInt("user_id")+" | ₹" + rs.getDouble("final_amount")+" | "+
+	        			rs.getString("status")+" | " + rs.getTimestamp("initiated_at"));
+	        }
+		}
+		catch(Exception e) {
+			throw new RuntimeException("Failed to fetch recharge transactions", e);
+		}
+		return list;
 	}
 }

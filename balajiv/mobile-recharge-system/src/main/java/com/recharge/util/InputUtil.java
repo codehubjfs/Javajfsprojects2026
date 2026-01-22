@@ -18,7 +18,20 @@ public class InputUtil {
 				return Integer.parseInt(sc.nextLine().trim());
 			}
 			catch(NumberFormatException e) {
-				System.out.println("Invalid number. Please try again.");
+				System.out.println("Invalid number. enter the int value correctly.");
+			}
+		}
+	}
+	
+	// used to verify the input value strictly as double
+	public static double readDouble(String message) {
+		while(true) {
+			try {
+				System.out.println(message+" ");
+				return Double.parseDouble(sc.nextLine().trim());
+			}
+			catch(NumberFormatException e) {
+				System.out.println("Invalid number. enter the double value correctly.");
 			}
 		}
 	}

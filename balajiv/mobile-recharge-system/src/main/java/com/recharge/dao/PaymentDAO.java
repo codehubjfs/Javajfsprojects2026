@@ -3,6 +3,8 @@ package com.recharge.dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.recharge.config.DBConnection;
 import com.recharge.model.Payment;
@@ -56,4 +58,33 @@ public class PaymentDAO {
 			throw new RuntimeException("Failed to record payment", e);
 		}
 	}
+	
+	public List<String> findAllPayments() {
+
+	    List<String> list = new ArrayList<>();
+
+	    String sql =
+	        "SELECT payment_id, recharge_id, attempt_number, amount, status " +
+	        "FROM payment ORDER BY payment_id DESC";
+
+	    try {
+	        Connection conn = DBConnection.getConnection();
+	        PreparedStatement ps = conn.prepareStatement(sql);
+	        ResultSet rs = ps.executeQuery();
+
+	        while (rs.next()) {
+	            list.add(
+	                rs.getInt("payment_id") + " | Recharge " +
+	                rs.getInt("recharge_id") + " | Attempt " +
+	                rs.getInt("attempt_number") + " | ₹" +
+	                rs.getDouble("amount") + " | " +
+	                rs.getString("status")
+	            );
+	        }
+	    } catch (Exception e) {
+	        throw new RuntimeException("Failed to fetch payments", e);
+	    }
+	    return list;
+	}
+
 }
