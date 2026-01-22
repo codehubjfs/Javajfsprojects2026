@@ -1,0 +1,7 @@
+package model.copy;
+
+public enum Gender {
+	male,
+	female,
+	others
+}

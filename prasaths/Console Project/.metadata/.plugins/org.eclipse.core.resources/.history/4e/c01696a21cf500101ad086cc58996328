@@ -1,0 +1,56 @@
+package DAO;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import Exceptions.InCorrectPasswordException;
+import Exceptions.InvalidRole;
+import Exceptions.UserNotFoundException;
+
+public class LoginCheck {
+	
+	static Connection con = null;
+			;
+	LoginCheck() throws Exception{
+		con = DBUtil.getConnection();
+	}
+	
+	public static void viewRoles() throws Exception {
+		
+		String sql1 = "select * from role";
+		Statement st = con.createStatement();
+		ResultSet rs1 = st.executeQuery(sql1);
+		
+		while(rs1.next()) {
+			System.out.println("Enter"+rs1.getInt(1)+" for "+rs1.getString(2));
+		}
+		
+	}
+	
+	public static boolean isValidUser(int id, String pass,int role) {
+		
+		String sql2 = " select * from user where user_id = ?";
+		
+		PreparedStatement st2 = con.prepareStatement(sql2);
+		st2.setInt(1,id);
+		ResultSet rs = st2.executeQuery();
+		
+		if (! rs.next()) {
+			throw new UserNotFoundException();
+		}
+
+		if(! pass.equals(rs.getString(2))) {
+			throw new InCorrectPasswordException();
+		}
+		
+		if(!(role == rs.getInt(3))) {
+			throw new InvalidRole();
+		}
+		return true;
+		
+	}
+	
+}

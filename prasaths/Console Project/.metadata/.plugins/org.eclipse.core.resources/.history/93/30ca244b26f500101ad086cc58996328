@@ -1,0 +1,57 @@
+package servicelayer;
+import java.sql.*;
+import java.util.*;
+import DAO.LoginCheck;
+import Exceptions.*;
+
+
+public class Login {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	public static void main(String[] args) throws SQLException{
+		
+		System.out.println("============================================================");
+		System.out.println("\t Welcome to leave Management portal   ");
+		System.out.println("============================================================");
+		
+		try {
+			
+			System.out.println("Enter the user id:");
+			int id = sc.nextInt();
+			
+			sc.nextLine();
+			System.out.println("Enter the password:");
+			String pass = sc.nextLine();
+			
+			LoginCheck.viewRoles();
+			int role = sc.nextInt();
+			
+			
+			if(LoginCheck.isValidUser(id, pass, role)) {
+				switch(role){
+					case 1 :
+						System.out.println("Redirecting to Admin DashBoard!....");
+						new Admin();
+						break;
+					case 2 :
+						System.out.println("Redirecting to Manager DashBoard!....");
+						new Manager();
+						break;
+					case 3:
+						System.out.println("Redirecting to Worker DashBoard!.....");
+						new Worker();
+						break;
+				}
+			}
+			
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+	
+	}
+	
+}

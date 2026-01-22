@@ -1,0 +1,62 @@
+package servicelayer;
+import java.sql.*;
+import java.util.*;
+import Exceptions.*;
+
+
+public class Login {
+	
+	static String url = "jdbc:mysql://localhost:3306/leavemanagement";
+	static String userName = "root";
+	static String password = "suguprasath@14";
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	public static void main(String[] args) throws SQLException{
+		
+		System.out.println("============================================================");
+		System.out.println("\t Welcome to leave Management portal   ");
+		System.out.println("============================================================");
+		
+		try {
+		
+			System.out.println("Enter the user id:");
+			int id = sc.nextInt();
+			
+			sc.nextLine();
+			System.out.println("Enter the password:");
+			String pass = sc.nextLine();
+			
+			System.out.println("Enter the role \n Enter 1 for Admin \n Enter 2 for Employee \n Enter 3 for Manager");
+			int role = sc.nextInt();
+			
+			String sql = " select * from user where user_id = ?";
+			
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			Connection con = DriverManager.getConnection(url,userName,password);
+			PreparedStatement st = con.prepareStatement(sql);
+			st.setInt(1,id);
+			ResultSet rs = st.executeQuery();
+			
+			if (! rs.next()) {
+				throw new UserNotFoundException();
+			}
+
+			if(! pass.equals(rs.getString(2))) {
+				throw new InCorrectPasswordException();
+			}
+			
+			if(!(role == rs.getInt(3))) {
+				throw new InvalidRole();
+			}
+			
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+	
+	}
+	
+}

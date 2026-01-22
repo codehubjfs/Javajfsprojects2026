@@ -1,0 +1,82 @@
+package servicelayer;
+import java.util.*;
+
+import DAO.AdminDao;
+import Exceptions.*;
+import model.*;
+
+/**
+ * 
+ * update leave policy has the access to change the values of policy 
+ * it is  used to update all the field except the primary field
+ * 
+ * @author prasath
+ * @since 8.0
+ * version 1.0
+ */
+public class UpdateLeavePolicy {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	//This function will change only the leave type
+	public static void UpdateLeaveType() throws Exception{
+		
+		System.out.println("============================Update leave type==================================");
+		
+		try {
+			System.out.println("Enter the leave type to be change:");
+			String exist = sc.nextLine();
+			
+			System.out.println("Enter the new leave type:");
+			String New = sc.nextLine();
+			
+			if(!exist.matches("^[a-zA-Z]+$") || !New.matches("^[a-zA-Z]+$")) {
+				throw new InvalidInputException("the input is invalid for the  leave type");
+			}
+			
+			List<LeavePolicy> lp = AdminDao.viewPolicy();
+			
+			boolean isHave = lp.stream().anyMatch(e -> e.getLeave_Type().equalsIgnoreCase(exist));
+			
+			if(isHave) {
+				AdminDao.updateLeaveType(exist.toUpperCase(), New.toUpperCase());
+			}
+			else {
+				throw new LeaveTypeException("leave type is not exist");
+			}
+			
+			
+		}
+		catch(InvalidInputException e) {
+			System.out.println(e.toString());
+		}
+	}
+
+	public static void UpdateAnnualEntitlement() {
+		
+		System.out.println("============================Update Anuual Entitlement==================================");
+		
+		try {
+			
+			System.out.println("Enter the leave type to be change:");
+			String exist = sc.nextLine();
+			
+			if(!exist.matches("^[a-zA-Z]+$")) {
+				throw new InvalidInputException("the input is invalid for the  leave type");
+			}
+			
+			System.out.println("Enter the number of annual entitle in postive value: ");
+			String annualEntitle = sc.nextLine();
+			
+			if(!(annualEntitle.matches("^[0-9]+$"))) {
+				
+			}
+			
+		}
+		catch(Exception e) {
+			
+		}
+	}
+	
+
+}

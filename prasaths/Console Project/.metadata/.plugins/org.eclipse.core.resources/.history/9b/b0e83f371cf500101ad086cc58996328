@@ -1,0 +1,7 @@
+package Exceptions.copy;
+
+public class InCorrectPasswordException extends Exception {
+	public InCorrectPasswordException(){
+		super("Incorrect password entry");
+	}
+}

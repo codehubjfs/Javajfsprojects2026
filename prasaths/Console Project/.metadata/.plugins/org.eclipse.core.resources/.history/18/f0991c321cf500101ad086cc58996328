@@ -1,0 +1,8 @@
+package model.copy;
+
+public enum SkillSet {
+	Java,
+	Python,
+	React,
+	SpringBoot
+}

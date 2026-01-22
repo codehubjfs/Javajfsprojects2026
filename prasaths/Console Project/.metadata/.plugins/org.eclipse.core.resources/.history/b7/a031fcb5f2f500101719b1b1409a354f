@@ -1,0 +1,15 @@
+package servicelayer;
+import java.util.*;
+
+public class UpdateLeavePolicy {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	public static void UpdateLeaveType(){
+		
+		System.out.println("Enter the leave type to be change:");
+		String exist = sc.nextLine();
+		
+	}
+
+}

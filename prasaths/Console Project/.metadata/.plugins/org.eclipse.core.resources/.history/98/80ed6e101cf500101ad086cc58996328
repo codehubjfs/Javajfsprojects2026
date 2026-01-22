@@ -1,0 +1,8 @@
+package model;
+
+public enum SkillSet {
+	Java,
+	Python,
+	React,
+	SpringBoot
+}

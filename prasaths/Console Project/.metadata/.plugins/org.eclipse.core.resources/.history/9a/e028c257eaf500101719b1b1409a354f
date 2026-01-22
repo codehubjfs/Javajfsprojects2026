@@ -1,0 +1,99 @@
+package model;
+import java.time.LocalDate;
+
+public class LeavePolicy {
+	
+	int leavePolicy;
+	String leave_Type;
+	int annualEntitlement;
+	String accuralRule;
+	int carryForward;
+	boolean encashment;
+	boolean probationAccure;
+	LocalDate date;
+	
+	public LeavePolicy(int leavePolicy, String leave_Type, int annualEntitlement, String accuralRule, int carryForward,
+			boolean encashment, boolean probationAccure, LocalDate date) {
+		super();
+		this.leavePolicy = leavePolicy;
+		this.leave_Type = leave_Type;
+		this.annualEntitlement = annualEntitlement;
+		this.accuralRule = accuralRule;
+		this.carryForward = carryForward;
+		this.encashment = encashment;
+		this.probationAccure = probationAccure;
+		this.date = date;
+	}
+
+	public int getLeavePolicy() {
+		return leavePolicy;
+	}
+
+	public void setLeavePolicy(int leavePolicy) {
+		this.leavePolicy = leavePolicy;
+	}
+
+	public String getLeave_Type() {
+		return leave_Type;
+	}
+
+	public void setLeave_Type(String leave_Type) {
+		this.leave_Type = leave_Type;
+	}
+
+	public int getAnnualEntitlement() {
+		return annualEntitlement;
+	}
+
+	public void setAnnualEntitlement(int annualEntitlement) {
+		this.annualEntitlement = annualEntitlement;
+	}
+
+	public String getAccuralRule() {
+		return accuralRule;
+	}
+
+	public void setAccuralRule(String accuralRule) {
+		this.accuralRule = accuralRule;
+	}
+
+	public int getCarryForward() {
+		return carryForward;
+	}
+
+	public void setCarryForward(int carryForward) {
+		this.carryForward = carryForward;
+	}
+
+	public boolean isEncashment() {
+		return encashment;
+	}
+
+	public void setEncashment(boolean encashment) {
+		this.encashment = encashment;
+	}
+
+	public boolean isProbationAccure() {
+		return probationAccure;
+	}
+
+	public void setProbationAccure(boolean probationAccure) {
+		this.probationAccure = probationAccure;
+	}
+
+	public LocalDate getDate() {
+		return date;
+	}
+
+	public void setDate(LocalDate date) {
+		this.date = date;
+	}
+
+	@Override
+	public String toString() {
+		return  "|"+leavePolicy + "|\t " + leave_Type + "\t|\t "
+				+ annualEntitlement + "\t|\t" + accuralRule + " \t|\t" + carryForward
+				+ "\t|\t" + encashment + "\t|\t" + probationAccure + "\t|\t" + date + "\t|";
+	}
+	
+}

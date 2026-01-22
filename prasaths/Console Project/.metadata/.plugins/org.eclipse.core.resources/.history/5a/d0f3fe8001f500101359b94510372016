@@ -1,0 +1,13 @@
+package model;
+import java.time.LocalDate;
+
+public class Employee extends Person{
+	
+	int employeeId;
+	String firstName;
+	String lastName;
+	SkillSet skill;
+	LocalDate joinDate;
+	EmployeeType empType;
+
+}

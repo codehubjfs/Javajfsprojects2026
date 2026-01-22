@@ -1,0 +1,221 @@
+package servicelayer;
+import java.util.InputMismatchException;
+import java.util.*;
+import DAO.AdminDao;
+import Exceptions.AccuralRuleException;
+import Exceptions.AnnualEntitleException;
+import Exceptions.CarryForwardException;
+import Exceptions.InvalidInputException;
+import Exceptions.LeaveTypeException;
+import model.*;
+
+public class AdminLeavePolicy {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	//----------------------------------main access of leave policy-------------------------------------
+	public static void LeavePolicyAccess() throws Exception {
+		
+		boolean terminate = false;
+		
+		String text = "==============================Leave policy control==============================\r\n"
+				+ "Enter 1 to view all policy\r\n"
+				+ "Enter 2 add new policy\r\n"
+				+ "Enter 3 to update the existing policy\r\n"
+				+ "Enter 4 to delete the policy\r\n"
+				+ "Enter 5 to exit\r\n"
+				+ "=================================================================================\r\n";
+		
+		do {
+			try {
+				System.out.println(text);
+				
+				System.out.println("Enter the choice:");
+				String choice = sc.nextLine();
+				if(!(choice.matches("^[0-9]$"))) {
+					throw new InvalidInputException("The choice entry is wrong in the update leave policy");
+				}
+				
+				switch(choice) {
+					case "1":
+						viewpolicy();
+						break;
+					case "2":
+						addLeavePolicy();
+						break;
+					case "3":
+						updateLeavePolicy();
+						break;
+					case "4":
+						deletePolicy();
+						break;
+					case "5":
+						terminate = true;
+						System.out.println("Return to the login page");
+						break;
+					default:
+						System.out.println("Enter the correct choice");
+				}
+			}
+			catch(InputMismatchException e) {
+				sc.nextLine();
+			}
+			
+		}
+		while(!terminate);
+		
+	}
+	
+	//addLeavePolicy function which is used to add new policy for the employees
+	public static void addLeavePolicy() throws Exception{
+		
+		System.out.println("============================================================");
+		System.out.println("Add new leave policy\n");
+		try {
+			System.out.println("--------------------------------");
+			System.out.println("|Enter the leave policy Name:  |");
+			System.out.println("--------------------------------");
+			sc.nextLine();
+			String leaveType = sc.nextLine();
+			if(!(leaveType.matches("^[a-zA-Z]+$"))) {
+				throw new LeaveTypeException("The value enter is not in the string");
+			}
+			
+			System.out.println("--------------------------------------------------------------------");
+			System.out.println("|Enter the annual entitlement in postive values from 1 to 18 days: |");
+			System.out.println("--------------------------------------------------------------------");
+			int annualEntitle = sc.nextInt();
+			if(annualEntitle < 0 || annualEntitle > 18) {
+				throw new AnnualEntitleException("Invalid number of days has been entered");
+			}
+			if(!(Integer.toString(annualEntitle).matches("^[0-9]+$"))) {
+				throw new AnnualEntitleException("The value entered is not integer");
+			}
+			
+			System.out.println("---------------------------------------------------------------");
+			System.out.println("|Enter the accural rule is applicable for monthly or weekly:  |");
+			System.out.println("|For montly please enter 1 or for yearly please enter 2       |");
+			System.out.println("---------------------------------------------------------------");
+			int accuralRule = sc.nextInt();
+			if(Integer.toString(accuralRule).matches("[^1-2]$") || (accuralRule != 1 && accuralRule != 2)) {
+				throw new AccuralRuleException("Invalid input has been entered in the accural rule");
+			}
+			
+			String ac = "";	
+			if(accuralRule == 1) {
+				ac = "MONTHLY";
+			}
+			else {
+				ac = "YEARLY";
+			}
+			
+			System.out.println("--------------------------------------------------");
+			System.out.println("|Enter the carry_forward_limit from 0 to 5 days: |");
+			System.out.println("--------------------------------------------------");
+			int carryForward = sc.nextInt();
+			if(carryForward < 0 || carryForward > 5) {
+				throw new CarryForwardException("Invalid input has been entered in the accural rule");
+			}
+			
+			System.out.println("----------------------------------------------------------------");
+			System.out.println("|If encashment allowed means please enter 1 or please enter 0: |");
+			System.out.println("----------------------------------------------------------------");
+			int allowed = sc.nextInt();
+			if(allowed != 1 && allowed != 0) {
+				throw new InvalidInputException("Invalid input has been entered in the encashment allowed");
+			}
+			boolean allow = false;
+			if(allowed == 1) {
+				allow = true;
+			}
+			
+			System.out.println("--------------------------------------------------------------------------------------");
+			System.out.println("|If acuural rule is applicable for probation means please enter 1 or please enter 0: |");
+			System.out.println("--------------------------------------------------------------------------------------");
+			int probationAllowed = sc.nextInt();
+			if(probationAllowed != 1 && probationAllowed != 0) {
+				throw new InvalidInputException("Invalid input has been entered in the probation allowed");
+			}
+			boolean probation = false;
+			if(probationAllowed == 1) {
+				probation = true;
+			}
+			
+			AdminDao.addNewPolicy(leaveType.toUpperCase(),annualEntitle,ac,carryForward,allow,probation);
+			System.out.println("New policy has been added successfully!!");
+		}
+		catch(InputMismatchException e) {
+			System.out.println(e.toString()+" "+"Input has been mismatched");
+			sc.nextLine();
+		}
+		catch(Exception e) {
+			System.out.println(e.toString());
+		}
+		
+	}
+	
+	//view all policy
+	public static void viewpolicy() throws Exception {
+		System.out.println("============================View all policy==================================");
+		List<LeavePolicy> lp = AdminDao.viewPolicy();
+		System.out.println("| "+"leave_policy"+"  | "+"leaveType"+"\t| "+"annual entitlement"+" | "+"accrual rule"+" | "+"carry forward"+" | "+"encashment allow"+" | "+"probation allowed"+" | "+"created date"+" |");
+		lp.stream().forEach(System.out::println);
+	}
+	
+	//Update the leave policy
+	public static void updateLeavePolicy() throws Exception {
+		
+		String text = "============================Update policy==================================\n"+
+				"Enter 1 to update the leave type\n"+"Enter 2 to update the annual entiltement\n"+"Enter 3 to update the accrual rule\n"+
+				"Enter 4 to update the carry forward\n"+"Enter 5 to update the encashment allowed\n"+
+				"Enter 6 to probation accural\n"+"Enter 7 to exit\n"+
+				"===========================================================================";
+		
+		boolean terminate = false;
+		do {
+			
+			System.out.println(text);
+			
+			System.out.println("Enter the choice:");
+			String choice = sc.nextLine();
+			if(!(choice.matches("^[0-9]$"))) {
+				throw new InvalidInputException("The choice entry is wrong in the update leave policy");
+			}
+			
+			switch(choice) {
+				case "1":
+					UpdateLeavePolicy.UpdateLeaveType();
+					break;
+				case "2":
+					UpdateLeavePolicy.UpdateAnnualEntitlement();
+					break;
+				case "3":
+					UpdateLeavePolicy.UpdateAccrualRule();
+					break;
+				case "4":
+					UpdateLeavePolicy.UpdateCarryForward();
+					break;
+				case "5":
+					UpdateLeavePolicy.encashmentAllowed();
+					break;
+				case "6":
+					UpdateLeavePolicy.updateprobation();
+					break;
+				case "7":
+					terminate = true;
+					System.out.println("exit from the update");
+					break;
+				default:
+					System.out.println("you would enter an wrong input");
+				
+			}
+		}while(!terminate);
+		
+	}
+	
+	//delete the leave policy
+	public static void deletePolicy() {
+		
+	}
+
+}

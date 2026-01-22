@@ -1,0 +1,101 @@
+package model;
+import java.time.LocalDate;
+/**
+ * personal details of the employee would be stored here
+ */
+
+public class Person {
+	
+	String email;
+	String contact;
+	LocalDate dob;
+	Gender gender;
+	String state;
+	String city;
+	String street;
+	String pincode;
+	
+	public Person(String email, String contact, LocalDate dob, Gender gender, String state, String city, String street,
+			String pincode) {
+		super();
+		this.email = email;
+		this.contact = contact;
+		this.dob = dob;
+		this.gender = gender;
+		this.state = state;
+		this.city = city;
+		this.street = street;
+		this.pincode = pincode;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getContact() {
+		return contact;
+	}
+
+	public void setContact(String contact) {
+		this.contact = contact;
+	}
+
+	public LocalDate getDob() {
+		return dob;
+	}
+
+	public void setDob(LocalDate dob) {
+		this.dob = dob;
+	}
+
+	public Gender getGender() {
+		return gender;
+	}
+
+	public void setGender(Gender gender) {
+		this.gender = gender;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getStreet() {
+		return street;
+	}
+
+	public void setStreet(String street) {
+		this.street = street;
+	}
+
+	public String getPincode() {
+		return pincode;
+	}
+
+	public void setPincode(String pincode) {
+		this.pincode = pincode;
+	}
+
+	@Override
+	public String toString() {
+		return "Person [email=" + email + ", contact=" + contact + ", dob=" + dob + ", gender=" + gender + ", state="
+				+ state + ", city=" + city + ", street=" + street + ", pincode=" + pincode + "]";
+	}
+
+}

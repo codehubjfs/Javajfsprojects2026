@@ -1,0 +1,9 @@
+package Exceptions;
+
+public class InvalidInputException {
+
+	public InvalidInputException() {
+		// TODO Auto-generated constructor stub
+	}
+
+}

@@ -1,0 +1,28 @@
+package DAO;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class LoginCheck {
+	
+	Connection con;
+	LoginCheck() throws Exception{
+		con = DBUtil.getConnection();
+	}
+	
+	public static void viewRoles() throws Exception {
+		
+		String sql1 = "select * from role";
+		Statement st = con.createStatement();
+		ResultSet rs1 = st.executeQuery(sql1);
+		
+		while(rs1.next()) {
+			System.out.println("Enter"+rs1.getInt(1)+" for "+rs1.getString(2));
+		}
+		
+	}
+	
+}

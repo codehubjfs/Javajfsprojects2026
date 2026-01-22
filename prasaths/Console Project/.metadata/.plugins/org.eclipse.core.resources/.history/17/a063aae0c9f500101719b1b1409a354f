@@ -1,0 +1,9 @@
+package Exceptions;
+
+public class AnnualEntitleException {
+
+	public AnnualEntitleException(String s) {
+		super(s);
+	}
+
+}

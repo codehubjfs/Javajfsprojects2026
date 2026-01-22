@@ -1,0 +1,7 @@
+package Exceptions;
+
+public class InvalidRole extends Exception{
+	public InvalidRole(int role) {
+		super("Mismatch role for the employee");
+	}
+}

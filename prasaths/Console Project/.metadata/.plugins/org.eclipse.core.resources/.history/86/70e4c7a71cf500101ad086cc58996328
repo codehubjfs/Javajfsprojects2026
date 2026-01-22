@@ -1,0 +1,59 @@
+package servicelayer;
+import java.sql.*;
+import java.util.*;
+import DAO.LoginCheck;
+import Exceptions.*;
+
+
+public class Login {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	public static void main(String[] args) throws SQLException{
+		
+		System.out.println("============================================================");
+		System.out.println("\t Welcome to leave Management portal   ");
+		System.out.println("============================================================");
+		
+		try {
+			
+			System.out.println("Enter the user id:");
+			int id = sc.nextInt();
+			
+			sc.nextLine();
+			System.out.println("Enter the password:");
+			String pass = sc.nextLine();
+			
+			LoginCheck.viewRoles();
+			int role = sc.nextInt();
+			
+			String sql2 = " select * from user where user_id = ?";
+			
+			PreparedStatement st2 = con.prepareStatement(sql2);
+			st2.setInt(1,id);
+			ResultSet rs = st2.executeQuery();
+			
+			if (! rs.next()) {
+				throw new UserNotFoundException();
+			}
+
+			if(! pass.equals(rs.getString(2))) {
+				throw new InCorrectPasswordException();
+			}
+			
+			if(!(role == rs.getInt(3))) {
+				throw new InvalidRole();
+			}
+			
+			
+			
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+	
+	}
+	
+}

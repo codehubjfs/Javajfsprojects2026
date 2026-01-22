@@ -1,0 +1,9 @@
+package Exceptions;
+
+public class AnnualEntitleException {
+
+	public AnnualEntitleException() {
+		// TODO Auto-generated constructor stub
+	}
+
+}

@@ -1,0 +1,143 @@
+package servicelayer;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import DAO.AdminDao;
+import Exceptions.InCorrectEmailException;
+import Exceptions.InvalidInputException;
+import model.*;
+
+/**
+ * It is used to access the employees which the they insert register and update
+ */
+public class AccessEmployees {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	//---------------------------------main control of the  employee access to admin------------------------------------------
+	public static void employeeAccess() {
+		
+		boolean terminate = false;
+		
+		try {
+			
+			do {
+				String text = "========================================Employee access by admin=================================\n"+
+						"Enter 1 to view the employee\n"+"Enter 2 to add new employee\n"+"Enter 3 to update exist employee\n"
+						+"Enter 4 to delete exist employee\n"+"Enter 5 to exit the page\n"+
+						"====================================================================================================";
+				System.out.println(text);
+				System.out.println("Enter the choice:");
+				String choice = sc.nextLine();
+				if(!(choice.matches("^[0-9]$"))) {
+					throw new InvalidInputException("The choice entry is wrong in the update leave policy");
+				}
+				
+				switch(choice) {
+					case "1":
+						viewAll();
+						break;
+					case "2":
+						addNewEmployee();
+						break;
+					case "3":
+						
+						break;
+					case "5":
+						terminate = true;
+						System.out.println("Return to the previous page");
+						break;
+					default:
+						System.out.println("Enter the correct choice");
+				}
+			}
+			while(terminate);
+			
+		}catch(Exception e) {
+			System.out.println(e.toString());
+		}
+		
+		sc.close();
+		
+	}
+	
+	//view all function to see all the employees
+	public static void viewAll(){
+			
+		try {
+			System.out.println("=====================================All employees can be viewed=======================");
+			System.out.println("All employee data");
+			List<Employee> emp = AdminDao.allEmployees();
+			if(emp.size() == 0) {
+				System.out.println("there is no employee");
+			}
+			else {
+				emp.stream().forEach(System.out::println);
+			}
+			System.out.println("============================================================");
+		}
+		catch(Exception e) {
+			System.out.println(e.toString());
+		}
+	}
+	
+	//to add new employee with  the userid and dummy password to login and then add some details and assign 
+	//the role id and project and added in the leave balance 
+	public static void addNewEmployee() {
+		
+		System.out.println("==========================================Add new employee===================================");
+		
+		try {
+			
+			System.out.println("Enter the first name:");
+			String firstName = sc.nextLine();
+			
+			System.out.println("Enter the last name:");
+			String lastName = sc.nextLine();
+			
+			if(!(firstName.matches("^[a-zA-Z]+$")) || !(lastName.matches("^[a-zA-Z]+$"))) {
+				throw new InvalidInputException("Invalid input entry in the name");
+			}
+			
+			System.out.println("Enter the date of birth in the format of yy-mm-dd:");
+			String date = sc.nextLine();
+			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yy-mm-dd");
+			LocalDate dob = LocalDate.parse(date, dtf);
+			
+			System.out.println("Skills available");
+			Set<String> skill = AdminDao.skill(); 
+			for(String s : skill) {
+				System.out.println(s);
+			}
+			
+			System.out.println("Enter the main skill like above mention:");
+			String skillset = sc.nextLine();
+			
+			System.out.println("Enter the email:");
+			String email = sc.nextLine();
+			
+			if(!(email.matches("^[a-zA-Z][a-zA-Z0-9._]{4,20}@([a-zA-Z]+\\.)+([a-zA-Z]{2,3})$"))) {
+				throw new InCorrectEmailException();
+			}
+			
+			System.out.println("Enter 1 for employee \n Enter 2 for manager");
+			String option = sc.nextLine();
+			if(!option.matches("^[1-2]$")) {
+				throw new InvalidInputException("the invalid option has been enter for role");
+			}
+			
+			String role = option.equals("1")?"employee":"manager";
+			
+			String password = firstName+role+""+dob.getYear();
+			
+			System.out.println(firstName+" "+lastName+" "+dob+" "+skillset+" "+email+" "+role+" "+password);
+			//AdminDao.addNewEmployee(firstName,lastName,dob,skillset,email,role,password);
+			
+		}
+		catch(Exception e) {
+			System.out.println(e.toString());
+		}
+		
+	}
+	
+}

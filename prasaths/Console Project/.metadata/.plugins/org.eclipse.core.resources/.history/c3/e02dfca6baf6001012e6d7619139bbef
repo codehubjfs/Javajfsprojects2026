@@ -1,0 +1,69 @@
+package servicelayer;
+import java.util.*;
+import DAO.AdminDao;
+import Exceptions.InvalidInputException;
+import model.*;
+
+/**
+ * It is used to access the employees which the they insert register and update
+ */
+public class AccessEmployees {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	//---------------------------------main control of the  employee access to admin------------------------------------------
+	public static void employeeAccess() {
+		
+		boolean terminate = false;
+		
+		try {
+			String text = "========================================Employee access by admin=================================\n"+
+					"Enter 1 to view the employee\n"+"Enter 2 to add new employee\n"+"Enter 3 to update exist employee\n"
+					+"Enter 4 to delete exist employee\n"+"Enter 5 to exit the page\n"+
+					"====================================================================================================";
+			System.out.println(text);
+			System.out.println("Enter the choice:");
+			String choice = sc.next();
+			if(!(choice.matches("^[0-9]$"))) {
+				throw new InvalidInputException("The choice entry is wrong in the update leave policy");
+			}
+			
+			switch(choice) {
+				case "1":
+					viewAll();
+					break;
+				case "2":
+					
+					break;
+				case "3":
+					
+					break;
+				case "5":
+					terminate = true;
+					System.out.println("Return to the previous page");
+					break;
+				default:
+					System.out.println("Enter the correct choice");
+			}
+			
+		}catch(Exception e) {
+			System.out.println(e.toString());
+		}
+		
+	}
+	
+	//view all function to see all the employees
+	public static void viewAll(){
+			
+		try {
+			System.out.println("============================================================");
+			System.out.println("All employee data");
+			List<Employee> emp = AdminDao.allEmployees();
+			System.out.println("============================================================");
+		}
+		catch(Exception e) {
+			
+		}
+	}
+	
+}

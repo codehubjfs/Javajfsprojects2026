@@ -1,0 +1,170 @@
+package servicelayer;
+import java.util.*;
+import DAO.AdminDao;
+import Exceptions.*;
+
+public class Admin {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	//---------------------------------main access control of the admin----------------------------------
+	public static void accessControls() throws Exception {
+		
+		boolean terminate = false;
+		
+		do {
+			try {
+				System.out.println("============================================================");
+				System.out.println("Enter 1 to view all employees");
+				System.out.println("Enter 2 add new employee");
+				System.out.println("Enter 3 to add the leave policy");
+				System.out.println("Enter 4 to update the leave policy");
+				System.out.println("Enter 5 to exit");
+				System.out.println("Enter the choice:");
+				int choice = sc.nextInt();
+				
+				switch(choice) {
+					case 1:
+						viewAll();
+						break;
+					case 2:
+						//registerNewEmployee();
+						break;
+					case 3:
+						addLeavePolicy();
+						break;
+					case 5:
+						terminate = true;
+						System.out.println("Return to the login page");
+						break;
+					default:
+						System.out.println("Enter the correct choice");
+				}
+			}
+			catch(InputMismatchException e) {
+				sc.nextLine();
+			}
+			
+		}
+		while(!terminate);
+		
+	}
+	
+	//view all function to see all the employees
+	public static void viewAll(){
+		
+		try {
+			System.out.println("============================================================");
+			System.out.println("All employee data");
+			AdminDao.allEmployees();
+			System.out.println("============================================================");
+		}
+		catch(Exception e) {
+			
+		}
+	}
+	
+	/*public static void registerNewEmployee() {
+		System.out.println("============================================================");
+		System.out.println("Register the new employee");
+		String sql = "INSERT INTO employee ("
+				+ "  emp_id, first_name, last_name, date_of_birth, join_date,"
+				+ "  employee_type, skill_set, street, city, state, pincode,"
+				+ "  phone_number, email, gender, user_id, created_at"
+				+ " ) VALUES"
+				+ " (101, 'Admin', 'User', '1985-01-01', '2015-01-01',\r\n"
+				+ " 'PERMANENT', 'React', 'Main Rd', 'Chennai', 'Tamil Nadu', '600001',\r\n"
+				+ " '9000000001', 'admin@company.com', 'MALE', 1, NOW())"
+		
+	}*/
+	
+	//addLeavePolicy function which is used to add new policy for the employees
+	public static void addLeavePolicy() throws Exception{
+		
+		System.out.println("============================================================");
+		System.out.println("Add new leave policy\n");
+		try {
+			System.out.println("--------------------------------");
+			System.out.println("|Enter the leave policy Name:  |");
+			System.out.println("--------------------------------");
+			sc.nextLine();
+			String leaveType = sc.nextLine();
+			if(!(leaveType.matches("^[a-zA-Z]+$"))) {
+				throw new LeaveTypeException("The value enter is not in the string");
+			}
+			
+			System.out.println("--------------------------------------------------------------------");
+			System.out.println("|Enter the annual entitlement in postive values from 1 to 18 days: |");
+			System.out.println("--------------------------------------------------------------------");
+			int annualEntitle = sc.nextInt();
+			if(annualEntitle < 0 || annualEntitle > 18) {
+				throw new AnnualEntitleException("Invalid number of days has been entered");
+			}
+			if(!(Integer.toString(annualEntitle).matches("^[0-9]+$"))) {
+				throw new AnnualEntitleException("The value entered is not integer");
+			}
+			
+			System.out.println("---------------------------------------------------------------");
+			System.out.println("|Enter the accural rule is applicable for monthly or weekly:  |");
+			System.out.println("|For montly please enter 1 or for yearly please enter 2       |");
+			System.out.println("---------------------------------------------------------------");
+			int accuralRule = sc.nextInt();
+			if(Integer.toString(accuralRule).matches("[^1-2]$") || (accuralRule != 1 && accuralRule != 2)) {
+				throw new AccuralRuleException("Invalid input has been entered in the accural rule");
+			}
+			
+			String ac = "";
+			if(accuralRule == 1) {
+				ac = "MONTHLY";
+			}
+			else {
+				ac = "YEARLY";
+			}
+			
+			System.out.println("--------------------------------------------------");
+			System.out.println("|Enter the carry_forward_limit from 0 to 5 days: |");
+			System.out.println("--------------------------------------------------");
+			int carryForward = sc.nextInt();
+			if(carryForward < 0 || carryForward > 5) {
+				throw new CarryForwardException("Invalid input has been entered in the accural rule");
+			}
+			
+			System.out.println("----------------------------------------------------------------");
+			System.out.println("|If encashment allowed means please enter 1 or please enter 0: |");
+			System.out.println("----------------------------------------------------------------");
+			int allowed = sc.nextInt();
+			if(allowed != 1 && allowed != 0) {
+				throw new InvalidInputException("Invalid input has been entered in the encashment allowed");
+			}
+			boolean allow = false;
+			if(allowed == 1) {
+				allow = true;
+			}
+			
+			System.out.println("--------------------------------------------------------------------------------------");
+			System.out.println("|If acuural rule is applicable for probation means please enter 1 or please enter 0: |");
+			System.out.println("--------------------------------------------------------------------------------------");
+			int probationAllowed = sc.nextInt();
+			if(probationAllowed != 1 && probationAllowed != 0) {
+				throw new InvalidInputException("Invalid input has been entered in the probation allowed");
+			}
+			boolean probation = false;
+			if(probationAllowed == 1) {
+				probation = true;
+			}
+			
+			System.out.println(leaveType.toUpperCase()+" "+annualEntitle+" "+ac+" "+carryForward+" "+allow+" "+probation);
+			AdminDao.addNewPolicy(leaveType.toUpperCase(),annualEntitle,ac,carryForward,allow,probation);
+			System.out.println("New policy has been added successfully!!");
+		}
+		catch(InputMismatchException e) {
+			System.out.println(e.toString()+" "+"Input has been mismatched");
+			sc.nextLine();
+		}
+		catch(Exception e) {
+			System.out.println(e.toString());
+		}
+		
+	}
+
+}

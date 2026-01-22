@@ -1,0 +1,24 @@
+package servicelayer;
+import java.util.*;
+
+/**
+ * 
+ * update leave policy has the access to change the values of policy 
+ * it is  used to update all the field except the primary field
+ * 
+ * @author prasath
+ * @since 8.0
+ * version 1.0
+ */
+public class UpdateLeavePolicy {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	public static void UpdateLeaveType(){
+		
+		System.out.println("Enter the leave type to be change:");
+		String exist = sc.nextLine();
+		
+	}
+
+}

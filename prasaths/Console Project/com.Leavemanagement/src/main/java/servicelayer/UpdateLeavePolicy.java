@@ -1,0 +1,240 @@
+package servicelayer;
+import java.util.*;
+
+import DAO.AdminDao;
+import Exceptions.*;
+import model.*;
+
+/**
+ * 
+ * update leave policy has the access to change the values of policy 
+ * it is  used to update all the field except the primary field
+ * 
+ * @author prasath
+ * @since 8.0
+ * version 1.0
+ */
+public class UpdateLeavePolicy {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	//This function will change only the leave type
+	public static void UpdateLeaveType() throws Exception{
+		
+		System.out.println("============================Update leave type==================================");
+		
+		try {
+			System.out.println("Enter the leave type to be change:");
+			String exist = sc.nextLine();
+			
+			System.out.println("Enter the new leave type:");
+			String New = sc.nextLine();
+			
+			if(!exist.matches("^[a-zA-Z]+$") || !New.matches("^[a-zA-Z]+$")) {
+				throw new InvalidInputException("the input is invalid for the  leave type");
+			}
+			
+			List<LeavePolicy> lp = AdminDao.viewPolicy();
+			
+			boolean isHave = lp.stream().anyMatch(e -> e.getLeave_Type().equalsIgnoreCase(exist));
+			
+			if(isHave) {
+				AdminDao.updateLeaveType(exist.toUpperCase(), New.toUpperCase());
+			}
+			else {
+				throw new LeaveTypeException("leave type is not exist");
+			}
+			
+			
+		}
+		catch(InvalidInputException e) {
+			System.out.println(e.toString());
+		}
+	}
+
+	public static void UpdateAnnualEntitlement() {
+		
+		System.out.println("============================Update Anuual Entitlement==================================");
+		
+		try {
+			
+			System.out.println("Enter the leave type :");
+			String exist = sc.nextLine();
+			
+			if(!exist.matches("^[a-zA-Z]+$")) {
+				throw new InvalidInputException("the input is invalid for the  leave type");
+			}
+			
+			System.out.println("Enter the number of annual entitle in postive value: ");
+			String annualEntitle = sc.nextLine();
+			
+			if(!(annualEntitle.matches("^[0-9]+$")) || Integer.parseInt(annualEntitle) < 0 ) {
+				throw new InvalidInputException("the annual entitle input is wrong");
+			}
+			
+			List<LeavePolicy> lp = AdminDao.viewPolicy();
+			
+			boolean isHave = lp.stream().anyMatch(e -> e.getLeave_Type().equalsIgnoreCase(exist));
+			
+			if(isHave) {
+				AdminDao.updateAnnualEntitle(exist.toUpperCase(), Integer.parseInt(annualEntitle));
+			}
+			else {
+				throw new LeaveTypeException("leave type is not exist");
+			}
+			
+			System.out.println("Updated successfully!......");
+			
+		}
+		catch(Exception e) {
+			System.out.println(e.toString());
+		}
+	}
+
+
+	public static void UpdateAccrualRule() throws AccuralRuleException, InvalidInputException {
+		
+		System.out.println("============================Update Accrual rule==================================");
+		
+		try {
+			System.out.println("Enter the leave type :");
+			String exist = sc.nextLine();
+			
+			if(!exist.matches("^[a-zA-Z]+$")) {
+				throw new InvalidInputException("the input is invalid for the  leave type");
+			}
+			
+			System.out.println("-------------------------------------------------------------------------");
+			System.out.println("|Enter the accural rule is applicable for monthly or weekly to change:  |");
+			System.out.println("|For montly please enter 1 or for yearly please enter 2                 |");
+			System.out.println("-------------------------------------------------------------------------");
+			int accuralRule = sc.nextInt();
+			if(Integer.toString(accuralRule).matches("[^1-2]$") || (accuralRule != 1 && accuralRule != 2)) {
+				throw new AccuralRuleException("Invalid input has been entered in the accural rule");
+			}
+			
+			String ac = "";
+			if(accuralRule == 1) {
+				ac = "MONTHLY";
+			}
+			else {
+				ac = "YEARLY";
+			}
+			
+			AdminDao.updateAccurualRule(exist.toUpperCase(), ac);
+			
+			System.out.println("Updated successfully!......");
+		}
+		catch(Exception e) {
+			System.out.println(e.toString());
+		}
+		
+	}
+
+	public static void UpdateCarryForward() {
+		
+		System.out.println("============================Update carry forward==================================");
+		
+		try {
+			
+			System.out.println("Enter the leave type :");
+			String exist = sc.nextLine();
+			
+			if(!exist.matches("^[a-zA-Z]+$")) {
+				throw new InvalidInputException("the input is invalid for the  leave type");
+			}
+			
+			System.out.println("--------------------------------------------------");
+			System.out.println("|Enter the carry_forward_limit from 0 to 5 days: |");
+			System.out.println("--------------------------------------------------");
+			int carryForward = sc.nextInt();
+			if(carryForward < 0 || carryForward > 5) {
+				throw new CarryForwardException("Invalid input has been entered in the accural rule");
+			}
+			
+			AdminDao.updateCarryForward(exist, carryForward);
+			
+			System.out.println("Updated successfully!......");
+			
+		}
+		catch(Exception e) {
+			System.out.println(e.toString());
+		}
+		
+	}
+	
+	public static void encashmentAllowed() {
+		
+		System.out.println("============================Update encashment allowed==================================");
+		
+		try {
+			
+			System.out.println("Enter the leave type :");
+			String exist = sc.nextLine();
+			
+			if(!exist.matches("^[a-zA-Z]+$")) {
+				throw new InvalidInputException("the input is invalid for the  leave type");
+			}
+			
+			System.out.println("----------------------------------------------------------------");
+			System.out.println("|If encashment allowed means please enter 1 or please enter 0: |");
+			System.out.println("----------------------------------------------------------------");
+			int allowed = sc.nextInt();
+			if(allowed != 1 && allowed != 0) {
+				throw new InvalidInputException("Invalid input has been entered in the encashment allowed");
+			}
+			boolean allow = false;
+			if(allowed == 1) {
+				allow = true;
+			}
+			
+			AdminDao.updateEncashment(exist,allow);
+			
+			System.out.println("Updated successfully!......");
+			
+		}
+		catch(Exception e) {
+			System.out.println(e.toString());
+		}
+		
+	}
+	
+	public static void updateprobation() {
+		
+		System.out.println("============================Update probation accrual==================================");
+		
+		try {
+			
+			System.out.println("Enter the leave type :");
+			String exist = sc.nextLine();
+			
+			if(!exist.matches("^[a-zA-Z]+$")) {
+				throw new InvalidInputException("the input is invalid for the  leave type");
+			}
+			
+			System.out.println("--------------------------------------------------------------------------------------");
+			System.out.println("|If acuural rule is applicable for probation means please enter 1 or please enter 0: |");
+			System.out.println("--------------------------------------------------------------------------------------");
+			int probationAllowed = sc.nextInt();
+			if(probationAllowed != 1 && probationAllowed != 0) {
+				throw new InvalidInputException("Invalid input has been entered in the probation allowed");
+			}
+			
+			boolean probation = false;
+			if(probationAllowed == 1) {
+				probation = true;
+			}
+			
+			AdminDao.probation(exist.toUpperCase(), probation);
+			
+			System.out.println("Updated successfully!......");
+			
+		}
+		catch(Exception e) {
+			System.out.println(e.toString());
+		}
+		
+	}
+	
+
+}

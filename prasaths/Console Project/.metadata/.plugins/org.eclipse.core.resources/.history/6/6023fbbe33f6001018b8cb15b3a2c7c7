@@ -1,0 +1,84 @@
+package servicelayer;
+import java.sql.*;
+import java.util.*;
+import DAO.LoginCheck;
+import Exceptions.*;
+
+
+public class Login {
+	
+	private static final Scanner sc = new Scanner(System.in);
+	
+	//----------------------------------------Central control------------------------------------
+	//All data has been validate in the login check in DAO
+	public static void main(String[] args){
+		
+		System.out.println("============================================================================");
+		System.out.println("\t \tWelcome to leave Management portal   ");
+		System.out.println("============================================================================");
+		
+		boolean terminate = false;
+		do {
+			
+			System.out.println("********************************login page**********************************");
+			String text = "Enter 1 for login \n"+
+					"Enter 2 for exit";
+			
+			System.out.println(text);
+			System.out.println("Enter the choice:");
+			int choice = sc.nextInt();
+			
+			switch(choice) {
+				case 1:
+					login();
+					break;
+				case 2:
+					terminate = true;
+					System.out.println("Exit from the portal");
+					break;
+				default:
+					System.out.println("Enter the correct value");
+			}
+			
+		}
+		while(!terminate);
+	}
+
+	private static void login() {
+		
+		try {
+			
+			System.out.println("Enter the user email:");
+			String email = sc.nextLine();
+			
+			System.out.println("Enter the password:");
+			String pass = sc.nextLine();
+			
+			if(LoginCheck.isValidUser(email, pass)) {
+				
+				String role = LoginCheck.getRole(email,pass);
+				
+				switch(role){
+					case "ADMIN":
+						System.out.println("Redirecting to Admin DashBoard!....");
+						System.out.println("============================================================");
+						Admin.accessControls();
+						break;
+					case "MANAGER" :
+						System.out.println("Redirecting to Manager DashBoard!....");
+						new Manager();
+						break;
+					case "EMPLOYEE":
+						System.out.println("Redirecting to Worker DashBoard!.....");
+						new Worker();
+						break;
+				}
+			}
+			
+		}
+		catch(Exception e) {
+			System.out.println(e.toString());
+		}
+	}
+	
+}

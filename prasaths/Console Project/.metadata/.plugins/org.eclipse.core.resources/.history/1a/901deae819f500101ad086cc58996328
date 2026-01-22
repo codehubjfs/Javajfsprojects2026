@@ -1,0 +1,11 @@
+package DAO;
+
+public class LoginCheck {
+
+	static String url = "jdbc:mysql://localhost:3306/leavemanagement";
+	static String userName = "root";
+	static String password = "suguprasath@14";
+	
+	
+	
+}

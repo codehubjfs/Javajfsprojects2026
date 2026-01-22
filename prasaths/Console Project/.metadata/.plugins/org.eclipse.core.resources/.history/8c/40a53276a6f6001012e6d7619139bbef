@@ -1,0 +1,214 @@
+package DAO;
+import java.sql.*;
+import java.util.*;
+
+import com.mysql.cj.xdevapi.Result;
+
+import model.*;
+
+public class AdminDao {
+	
+	static Connection con = null;
+	
+	//It is used to view all the employees
+	public static void allEmployees() throws Exception {
+		
+		String sql = "select e.emp_id,concat(e.first_name,e.last_name) as name,e.join_date,e.employee_type,e.skill_set,p.project_name,ep.assigned_date from employee e"
+				+ " join employee_project ep on e.emp_id = ep.emp_id"
+				+ " join project p on ep.project_id = p.project_id;";
+		
+		
+		con = DBUtil.getConnection();
+		Statement st = con.createStatement();
+		ResultSet rs = st.executeQuery(sql);
+		
+		while(rs.next()) {
+			System.out.println(rs.getInt(1)+"\t"+rs.getString(2)+"\t"+rs.getDate(3)+"\t"+rs.getString(4)+"\t"+rs.getString(5)+"\t"+rs.getString(6)+"\t\t\t"+rs.getDate(7));
+		}
+		
+	}
+	
+	//It is used to add new policy for the employees
+	public static void addNewPolicy(String leaveType, int annualEntitlement, String accuralRule, int carryForward, boolean encashment, boolean probationAccural) {
+		
+		try {
+			String sql = "insert into leave_policy (leave_type, 			annual_entitlement,accrual_rule,carry_forward_limit,encashment_allowed,probation_accrual) values (?,?,?,?,?,?)";
+			
+			String sql1 = "Select emp_id from employee e"
+					+ " join user u on e.user_id = u.user_id"
+					+ " join role r on r.role_id = u.role_id"
+					+ " where r.role_name = 'EMPLOYEE' ";
+			
+			String sql2 = "insert into leave_balance (employee_id, policy_id, leave_balance) values (?,?,?)";
+			
+			String sql3 = "select policy_id from leave_policy where leave_type = ?";
+			
+			con = DBUtil.getConnection();
+			PreparedStatement ps = con.prepareStatement(sql);
+			ps.setString(1,leaveType);
+			ps.setInt(2, annualEntitlement);
+			ps.setString(3, accuralRule);
+			ps.setInt(4,carryForward);
+			ps.setBoolean(5, encashment);
+			ps.setBoolean(6, probationAccural);
+			ps.executeUpdate();
+			
+			Statement st = con.createStatement();
+			ResultSet rs = st.executeQuery(sql1);
+			
+			PreparedStatement ps1 = con.prepareStatement(sql3);
+			ps1.setString(1, leaveType);
+			ResultSet rs1 = ps1.executeQuery();
+			
+			int id = 0;
+			if(rs1.next())
+				id = rs1.getInt(1);
+			System.out.println(id);
+			
+			while(rs.next()) {
+				ps = con.prepareStatement(sql2);
+				ps.setInt(1, rs.getInt(1));
+				ps.setInt(2,id);
+				ps.setInt(3,annualEntitlement);
+				ps.executeUpdate();
+			}
+			
+			System.out.println("inserted successfully");
+			
+		}
+		catch(Exception e) {
+			System.out.println(e.toString()+"check weather there is a problem in sql connection or query");
+			e.printStackTrace();
+			
+		}
+		
+		
+	}
+	
+	//It is used to view the leave policy so return the array of object 
+	public static List<LeavePolicy> viewPolicy() {
+		
+		List<LeavePolicy> lp = new ArrayList<>();
+		try {
+		
+		String sql = "select * from leave_policy";
+		con = DBUtil.getConnection();
+		Statement st = con.createStatement();
+		ResultSet rs = st.executeQuery(sql);
+		
+		while(rs.next()) {
+			lp.add(new LeavePolicy(rs.getInt(1),rs.getString(2),rs.getInt(3),rs.getString(4),rs.getInt(5),rs.getBoolean       (6),rs.getBoolean(7),rs.getDate(8).toLocalDate()));
+		}
+		
+		}
+		catch(Exception e) {
+			System.out.println(e.toString()+"check weather there is a problem in sql connection or query");
+		}
+		
+		return lp;
+	}
+	
+	//it is used to update the leave type
+	public static void updateLeaveType(String exist, String New) throws Exception {
+		
+		try {
+			String sql = "update leave_policy set leave_type = ? where leave_type = ?";
+			con = DBUtil.getConnection();
+			PreparedStatement ps = con.prepareStatement(sql);
+			ps.setString(1,New);
+			ps.setString(2, exist);
+			ps.executeUpdate();
+		}
+		catch(Exception e) {
+			System.out.println(e.toString()+"check weather there is a problem in sql connection or query");
+		}
+		
+	}
+	
+	//it is used to update the annualEntitlement
+	public static void updateAnnualEntitle(String exist, int days) throws Exception{
+		
+		try {
+			String sql = "Update leave_policy  set annual_entitlement = ? where leave_type = ?";
+			con = DBUtil.getConnection();
+			PreparedStatement ps = con.prepareStatement(sql);
+			ps.setInt(1,days);
+			ps.setString(2, exist);
+			ps.executeUpdate();
+		}
+		catch(Exception e) {
+			System.out.println(e.toString()+"check weather there is a problem in sql connection or query");
+		}
+		
+	}
+	
+	//it is used to update the  accrual rule
+	public static void updateAccurualRule(String exist, String accurual){
+		
+		try {
+			String sql = "Update leave_policy  set accrual_rule = ? where leave_type = ?";
+			con = DBUtil.getConnection();
+			PreparedStatement ps = con.prepareStatement(sql);
+			ps.setString(1,accurual);
+			ps.setString(2, exist);
+			ps.executeUpdate();
+		}
+		catch(Exception e) {
+			System.out.println(e.toString()+"check weather there is a problem in sql connection or query");
+		}
+		
+	}
+
+	// it is used to update the carry forward in the leave policy
+	public static void updateCarryForward(String exist, int carryForward) {
+		
+		try {
+			String sql = "Update leave_policy  set carry_forward = ? where leave_type = ?";
+			con = DBUtil.getConnection();
+			PreparedStatement ps = con.prepareStatement(sql);
+			ps.setInt(1,carryForward);
+			ps.setString(2, exist);
+			ps.executeUpdate();
+		}
+		catch(Exception e) {
+			System.out.println(e.toString()+"check weather there is a problem in sql connection or query");
+		}
+		
+		
+	}
+
+	//it is used to update the encashment in the leave policy
+	public static void updateEncashment(String exist, boolean allow) {
+		
+		try {
+			String sql = "Update leave_policy  set encashment_allowed = ? where leave_type = ?";
+			con = DBUtil.getConnection();
+			PreparedStatement ps = con.prepareStatement(sql);
+			ps.setBoolean(1,allow);
+			ps.setString(2, exist);
+			ps.executeUpdate();
+		}
+		catch(Exception e) {
+			System.out.println(e.toString()+"check weather there is a problem in sql connection or query");
+		}
+		
+	}
+	
+	//it is used to update the  probation in the leave policy
+	public static void probation (String exist, boolean allow) {
+		
+		try {
+			String sql = "Update leave_policy  set probation_accrual = ? where leave_type = ?";
+			con = DBUtil.getConnection();
+			PreparedStatement ps = con.prepareStatement(sql);
+			ps.setBoolean(1,allow);
+			ps.setString(2, exist);
+			ps.executeUpdate();
+		}
+		catch(Exception e) {
+			System.out.println(e.toString()+"check weather there is a problem in sql connection or query");
+		}
+		
+	}
+	
+}

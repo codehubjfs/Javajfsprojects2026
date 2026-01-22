@@ -1,0 +1,9 @@
+package Exceptions;
+
+public class CarryForwardException {
+
+	public CarryForwardException() {
+		// TODO Auto-generated constructor stub
+	}
+
+}
