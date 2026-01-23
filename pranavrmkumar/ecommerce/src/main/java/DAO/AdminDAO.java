@@ -12,30 +12,45 @@ import java.util.ArrayList;
 import Exceptions.DataAccessException;
 import Exceptions.EntityNotFoundException;
 import Model.Category;
+import Model.Customer;
 import Model.Discount;
 import Model.Inventory;
 import Model.Product;
 import Model.Ticket;
-import Model.User;
 import util.DBUtil;
 
 public class AdminDAO {
 	
 //Query for an Admin to view all customers
-	public static ArrayList<User> viewCustomers() throws DataAccessException {
-		ArrayList<User> users = new ArrayList<>();
-		String sql = "select user_id,name,email from user where role = 'customer'";
+	public static ArrayList<Customer> viewCustomers() throws DataAccessException {
+		ArrayList<Customer> customers = new ArrayList<>();
+		String sql = "select name,email,role,status from user where role = 'customer'";
 		try(Connection con = DBUtil.getConnection();
 				Statement st = con.createStatement();
 				ResultSet rs = st.executeQuery(sql)) {
 			while(rs.next()) {
-				users.add(new User(rs.getInt("user_id"),rs.getString("name"),rs.getString("email")));
+				customers.add(new Customer(rs.getString("name"),rs.getString("email"),rs.getString("status")));
 			}
 		}
 		catch(SQLException | IOException e) {
 			throw new DataAccessException("Unable to fetch Customers.");
 		}
-		return users;
+		return customers;
+	}
+	
+//Query to block a customer
+	public static void blockCustomers(String email) throws DataAccessException,EntityNotFoundException{
+		String sql = "update user set status = 'inactive' where email = ? and role = 'customer'";
+		try(Connection con = DBUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)){
+			ps.setString(1, email);
+			int rows = ps.executeUpdate();
+			if(rows == 0) {
+				throw new EntityNotFoundException("Customer not found.");
+			}
+		}catch(SQLException | IOException e) {
+			throw new DataAccessException("Unable to fetch Categories.");
+		}
 	}
 	
 //Query to view all categories
@@ -63,9 +78,8 @@ public class AdminDAO {
 				PreparedStatement ps = con.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)){
 			ps.setString(1, category_name);
 			ps.setString(2, description);
-			ps.executeUpdate();
-			ResultSet rs = ps.getGeneratedKeys();
-	        if (!rs.next()) {
+			int rows = ps.executeUpdate();
+	        if (rows == 0) {
 	            throw new DataAccessException("Failed to create Category");
 	        }
 		}
@@ -365,7 +379,7 @@ public class AdminDAO {
 				ResultSet rs = st.executeQuery(sql)){
 			while(rs.next()) {
 				tickets.add(new Ticket(rs.getInt("ticket_id"),rs.getInt("user_id"),rs.getInt("order_id"),rs.getString("issue_type"),
-						rs.getString("description"),rs.getString("ticket_status"),rs.getTimestamp("created_date")));
+						rs.getString("description"),rs.getString("ticket_status"),rs.getDate("created_date")));
 			}
 		}
 		catch(SQLException | IOException e) {

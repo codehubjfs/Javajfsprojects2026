@@ -1,6 +1,6 @@
 package Model;
 
-import java.sql.Timestamp;
+import java.sql.Date;
 
 public class Ticket {
 	private int ticket_id;
@@ -9,9 +9,9 @@ public class Ticket {
 	private String issue_type;
 	private String description;
 	private String ticket_status;
-	private Timestamp created_date;
+	private Date created_date;
 	
-	public Ticket(int ticket_id,int user_id,int order_id,String issue_type,String description,String ticket_status,Timestamp created_date) {
+	public Ticket(int ticket_id,int user_id,int order_id,String issue_type,String description,String ticket_status,Date created_date) {
 		this.ticket_id = ticket_id;
 		this.user_id = user_id;
 		this.order_id = order_id;
@@ -46,7 +46,7 @@ public class Ticket {
 		return ticket_status;
 	}
 	
-	public Timestamp getDate() {
+	public Date getDate() {
 		return created_date;
 	}
 }

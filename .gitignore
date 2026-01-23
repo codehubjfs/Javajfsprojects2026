@@ -21,3 +21,9 @@ pranavrmkumar/ecommerce/target/classes/Model/User.class
 pranavrmkumar/ecommerce/target/classes/UI/Admin.class
 pranavrmkumar/ecommerce/target/classes/util/DBUtil.class
 pranavrmkumar/ecommerce/target/classes/util/InputValidate.class
+pranavrmkumar/ecommerce/target/classes/DAO/AuthDAO.class
+pranavrmkumar/ecommerce/target/classes/Exceptions/InvalidCredentialsException.class
+pranavrmkumar/ecommerce/target/classes/Model/Admin.class
+pranavrmkumar/ecommerce/target/classes/Model/Customer.class
+pranavrmkumar/ecommerce/target/classes/ServiceLayer/AuthService.class
+pranavrmkumar/ecommerce/target/classes/UI/LoginUI.class

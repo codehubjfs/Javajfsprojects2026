@@ -1,6 +1,7 @@
 package util;
 import java.util.Scanner;
-
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import Exceptions.EmptyInputException;
 import Exceptions.InputMismatchException;
 
@@ -16,7 +17,7 @@ public class InputValidate {
 			}
 			
 			//number check
-			if(!input.matches("\\d+")) {
+			if(!input.matches("[0-9]+")) {
 				throw new InputMismatchException("Input must be an Integer.");
 			}
 			
@@ -44,7 +45,7 @@ public class InputValidate {
 			}
 			
 			//number check
-			if(!input.matches("\\d+")) {
+			if(!input.matches("[0-9]+")) {
 				throw new InputMismatchException("Input must be an Integer.");
 			}
 			
@@ -92,7 +93,7 @@ public class InputValidate {
 				throw new EmptyInputException("Input is empty.");
 			}
 			
-			if(!input.matches("\\d+(\\.\\d+)?")) {
+			if(!input.matches("[0-9]+(\\.[0-9]+)?")) {
 				throw new InputMismatchException("Enter a valid value.");
 			}
 			
@@ -118,8 +119,10 @@ public class InputValidate {
 				throw new EmptyInputException("Input is empty.");
 			}
 			
-			if(!input.matches("\\d{4}-\\d{2}-\\d{2}")) {
-				throw new InputMismatchException("Incorrect date format.Use format yyyy-mm-dd");
+			try {
+				LocalDate.parse(input);
+			}catch(DateTimeParseException e) {
+				throw new InputMismatchException("Invalid Date Formate.Use yyyy-MM-dd");
 			}
 			
 			return input;
@@ -139,12 +142,43 @@ public class InputValidate {
 			}
 			
 			//Invalid Char check
-			if(!input.matches("[a-zA-Z0-9 ._\\-]+")) {
+			if(!input.matches("[a-zA-Z0-9 ._\\-/]+")) {
 				throw new InputMismatchException("Invalid Characters Detected.Try Again.");
 			}
 			
 			
 			return input;
 		}
+	}
+	
+	
+	//method to validate for email address
+	public static String EmailValidation(Scanner s,String prompt) throws EmptyInputException,InputMismatchException {
+		System.out.println(prompt);
+		String input = s.nextLine().trim();
+		
+		//null check
+		if(input.isEmpty()) {
+			throw new EmptyInputException("Email cannot be empty");
+		}
+		
+		if(!input.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+			throw new InputMismatchException("Invalid email format.");
+		}
+		
+		return input;
+	}
+	
+	
+	//method to validate for password
+	public static String PasswordValidation(Scanner s,String prompt) throws EmptyInputException{
+		System.out.println(prompt);
+		String input = s.nextLine().trim();
+		
+		if(input.isEmpty()) {
+			throw new EmptyInputException("Password cannot be empty");
+		}
+		
+		return input;
 	}
 }

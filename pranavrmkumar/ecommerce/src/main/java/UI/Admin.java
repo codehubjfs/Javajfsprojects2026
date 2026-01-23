@@ -7,7 +7,7 @@ import ServiceLayer.AdminServices;
 import util.InputValidate;
 
 public class Admin {
-	public static void main(String[] args) throws Exception {
+	public static void menu() throws Exception {
 		Scanner s = new Scanner(System.in);
 		int choice;
 		System.out.println("--------------------------Welcome to Admin Page--------------------------------");

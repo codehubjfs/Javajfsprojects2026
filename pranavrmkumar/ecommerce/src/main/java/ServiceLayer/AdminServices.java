@@ -1,36 +1,44 @@
 package ServiceLayer;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Scanner;
 
 import DAO.AdminDAO;
 import Exceptions.DataAccessException;
 import Exceptions.EmptyInputException;
+import Exceptions.EntityNotFoundException;
 import Exceptions.InputMismatchException;
 import util.InputValidate;
 
 public class AdminServices {
 	private static final Scanner s = new Scanner(System.in);
-	static int choice = -1;
-	
 	
 	public static void manageCustomers() {
+		int choice = -1;
 		do {
 			try {
-		System.out.println("1.View all customers.\n2.Go back to previous page.");
+		System.out.println("1.View all customers.\n2.Block a Customer\n3.Go back to previous page.");
 		System.out.print("Please enter your choice: ");
-		choice = InputValidate.ChoiceValidation(s, 1, 2);
+		choice = InputValidate.ChoiceValidation(s, 1, 3);
 		System.out.println();
 		switch(choice) {
+		
 		case 1:
 			AdminDAO.viewCustomers().stream()
 			.forEach(u -> 
-					System.out.println(u.getUserId() + " | " + u.getName() + " | " + u.getEmail()));
+					System.out.println(u.getName() + " | " + u.getEmail() + " | " +u.getStatus()));
 			System.out.println();
 			break;
+			
 		case 2:
+			String email = InputValidate.EmailValidation(s, "Enter email ID of customer to block: ");
+			AdminDAO.blockCustomers(email);
+			System.out.println("Customer is blocked");
+			break;
+			
+		case 3:
+			
 			return;
-		}}catch(EmptyInputException | InputMismatchException | DataAccessException e) {
+			}	
+			}catch(EmptyInputException | InputMismatchException | DataAccessException | EntityNotFoundException e) {
 			System.out.println(e.getMessage());
 			System.out.println();
 			choice = -1;
@@ -41,6 +49,7 @@ public class AdminServices {
 	
 	
 	public static void manageCategory() throws Exception{
+		int choice = -1;
 		do {
 			try {
 			System.out.println("1.View all Categories\n2.Create a new Category.\n3.Delete a Category\n4.Modify a category.\n5.Go back to previous page.");
@@ -60,6 +69,7 @@ public class AdminServices {
 				String category_name = InputValidate.StringValidation(s, "Please enter the new Category name: ");
 				String desc = InputValidate.DescURLValidation(s, "Please enter the Category Description: ");
 				AdminDAO.addCategory(category_name, desc);
+				System.out.println("Category added Successfully");
 				System.out.println();
 				break;
 				
@@ -128,6 +138,7 @@ public class AdminServices {
 	
 	
 	public static void manageProducts() throws Exception{
+		int choice = -1;
 		int pid;
 		do {
 			try {
@@ -182,9 +193,10 @@ public class AdminServices {
 	
 	
 	public static void manageInventory() throws Exception{
+		int choice = -1;
 		do {
 			try {
-			System.out.println("1.Check Inventory of a Product.\n2.Add more stock to Inventory\n3.Go back to previous page.");
+			System.out.println("1.View Inventory.\n2.Add more stock to Inventory\n3.Go back to previous page.");
 			System.out.println("Please enter your choice: ");
 			choice = InputValidate.ChoiceValidation(s, 1, 3);
 			System.out.println();
@@ -224,6 +236,7 @@ public class AdminServices {
 
 	public static void manageDiscounts() throws Exception{
 		// TODO Auto-generated method stub
+		int choice = -1;
 		do {
 			try {
 		System.out.println("1.Add new Discount\n2.Delete discount.\n3.View all discounts.\n4.Go back to previous page.");
@@ -266,6 +279,7 @@ public class AdminServices {
 	}
 	
 	public static void manageTickets() throws Exception {
+		int choice = -1;
 	    do {
 	    	try {
 	    	System.out.println("1.View all Support Tickets.\n2.Update Ticket Status.\n3.Go back to previous page.");
