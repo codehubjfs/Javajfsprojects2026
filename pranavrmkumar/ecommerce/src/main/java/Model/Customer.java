@@ -10,4 +10,5 @@ public class Customer extends User{
 	public String getStatus() {
 		return status;
 	}
+
 }

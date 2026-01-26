@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-import Exceptions.DataAccessException;
+import Exceptions.DBAccessException;
 import Exceptions.EntityNotFoundException;
 import Model.Category;
 import Model.Customer;
@@ -22,7 +22,7 @@ import util.DBUtil;
 public class AdminDAO {
 	
 //Query for an Admin to view all customers
-	public static ArrayList<Customer> viewCustomers() throws DataAccessException {
+	public static ArrayList<Customer> viewCustomers() throws DBAccessException {
 		ArrayList<Customer> customers = new ArrayList<>();
 		String sql = "select name,email,role,status from user where role = 'customer'";
 		try(Connection con = DBUtil.getConnection();
@@ -33,13 +33,13 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Customers.");
+			throw new DBAccessException("Unable to fetch Customers.");
 		}
 		return customers;
 	}
 	
 //Query to block a customer
-	public static void blockCustomers(String email) throws DataAccessException,EntityNotFoundException{
+	public static void blockCustomers(String email) throws DBAccessException,EntityNotFoundException{
 		String sql = "update user set status = 'inactive' where email = ? and role = 'customer'";
 		try(Connection con = DBUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
@@ -49,12 +49,12 @@ public class AdminDAO {
 				throw new EntityNotFoundException("Customer not found.");
 			}
 		}catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Categories.");
+			throw new DBAccessException("Unable to fetch Customers.");
 		}
 	}
 	
 //Query to view all categories
-	public static ArrayList<Category> viewCategories() throws DataAccessException{
+	public static ArrayList<Category> viewCategories() throws DBAccessException{
 		ArrayList<Category> categories = new ArrayList<>();
 		String sql = "select * from category";
 		try(Connection con = DBUtil.getConnection();
@@ -65,14 +65,14 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Categories.");
+			throw new DBAccessException("Unable to fetch Categories.");
 		}
 		return categories;
 	}
 	
 	
 //Query for Admin to Add a new Category
-	public static void addCategory(String category_name,String description) throws DataAccessException {
+	public static void addCategory(String category_name,String description) throws DBAccessException {
 		String sql = "insert into category(category_name,description) values (?,?)";
 		try(Connection con = DBUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)){
@@ -80,16 +80,16 @@ public class AdminDAO {
 			ps.setString(2, description);
 			int rows = ps.executeUpdate();
 	        if (rows == 0) {
-	            throw new DataAccessException("Failed to create Category");
+	            throw new DBAccessException("Failed to create Category");
 	        }
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Categories.");
+			throw new DBAccessException("Unable to fetch Categories.");
 		}
 	}
 	
 //Query to delete a category
-	public static void deleteCategory(int category_id) throws DataAccessException, EntityNotFoundException{
+	public static void deleteCategory(int category_id) throws DBAccessException, EntityNotFoundException{
 		String sql = "update category set status = 'inactive' where category_id = ?";
 		try(Connection con = DBUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
@@ -100,12 +100,12 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Categories.");
+			throw new DBAccessException("Unable to fetch Categories.");
 		}
 	}
 	
 //Query to modify category name
-	public static void modifyCategoryName(String category_name,int category_id) throws DataAccessException, EntityNotFoundException{
+	public static void modifyCategoryName(String category_name,int category_id) throws DBAccessException, EntityNotFoundException{
 		String sql = "update category set category_name = ? where category_id = ?";
 		try(Connection con = DBUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)) {
@@ -117,12 +117,12 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Categories.");
+			throw new DBAccessException("Unable to fetch Categories.");
 		}
 	}
 	
 //Query to modify category desc
-	public static void modifyCategoryDesc(String description,int category_id) throws DataAccessException, EntityNotFoundException{
+	public static void modifyCategoryDesc(String description,int category_id) throws DBAccessException, EntityNotFoundException{
 		String sql = "update category set description = ? where category_id = ?";
 		try(Connection con = DBUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)) {
@@ -134,12 +134,12 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Categories.");
+			throw new DBAccessException("Unable to fetch Categories.");
 		}
 	}
 		
 //Query to modify category status
-		public static void modifyCategoryStatus(String status,int category_id) throws DataAccessException, EntityNotFoundException{
+		public static void modifyCategoryStatus(String status,int category_id) throws DBAccessException, EntityNotFoundException{
 			String sql = "update category set status = ? where category_id = ?";
 			try(Connection con = DBUtil.getConnection();
 					PreparedStatement ps = con.prepareStatement(sql)) {
@@ -151,12 +151,12 @@ public class AdminDAO {
 				}
 			}
 			catch(SQLException | IOException e) {
-				throw new DataAccessException("Unable to fetch Categories.");
+				throw new DBAccessException("Unable to fetch Categories.");
 			}
 		}
 	
 //Query for Admin to add a new Product
-	public static void addProduct(int category_id,String name,String brand,String description,double price,String image_url) throws DataAccessException{
+	public static void addProduct(int category_id,String name,String brand,String description,double price,String image_url) throws DBAccessException{
 		String sql1 = "insert into product(category_id,name,brand,description,price,image_url) values (?,?,?,?,?,?)";
 		String sql2 = "insert into inventory(product_id,stock_quantity) values (?,0)";
 		try(Connection con = DBUtil.getConnection()){
@@ -171,7 +171,7 @@ public class AdminDAO {
 			
 			ResultSet rs = ps.getGeneratedKeys();
 	        if (!rs.next()) {
-	            throw new DataAccessException("Failed to create product");
+	            throw new DBAccessException("Failed to create product");
 	        }
 
 	        int productId = rs.getInt(1);
@@ -180,12 +180,12 @@ public class AdminDAO {
 	        ps2.executeUpdate();
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Products.");
+			throw new DBAccessException("Unable to create Product.");
 		}
 	}
 	
 //Query to delete a Product
-	public static void deleteProduct(int pid) throws DataAccessException ,EntityNotFoundException{
+	public static void deleteProduct(int pid) throws DBAccessException ,EntityNotFoundException{
 		// TODO Auto-generated method stub
 		String sql = "update product set status = 'inactive' where product_id = ?";
 		try(Connection con = DBUtil.getConnection();
@@ -197,13 +197,13 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Products.");
+			throw new DBAccessException("Unable to fetch Products.");
 		}
 	}
 	
 	
 //Query to update product price
-	public static void modifyProductPrice(int pid, double newPrice) throws DataAccessException, EntityNotFoundException{
+	public static void modifyProductPrice(int pid, double newPrice) throws DBAccessException, EntityNotFoundException{
 		// TODO Auto-generated method stub
 		String sql = "update product set price = ? where product_id = ?";
 		try(Connection con = DBUtil.getConnection();
@@ -216,12 +216,12 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Products.");
+			throw new DBAccessException("Unable to fetch Products.");
 		}
 	}
 	
 //Query to view all products
-	public static ArrayList<Product> viewProducts() throws DataAccessException {
+	public static ArrayList<Product> viewProducts() throws DBAccessException {
 		// TODO Auto-generated method stub
 		ArrayList<Product> products = new ArrayList<>();
 		String sql = "select * from product";
@@ -234,14 +234,14 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Products.");
+			throw new DBAccessException("Unable to fetch Products.");
 		}
 		return products;
 	}
 	
 	
 //Query to view inventory
-	public static ArrayList<Inventory> viewInventory() throws DataAccessException{
+	public static ArrayList<Inventory> viewInventory() throws DBAccessException{
 		ArrayList<Inventory> inventory = new ArrayList<>();
 		// TODO Auto-generated method stub
 		String sql = "select i.inventory_id,i.product_id,i.stock_quantity,p.name as product_name from inventory i "
@@ -254,13 +254,13 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Inventory.");
+			throw new DBAccessException("Unable to fetch Inventory.");
 		}
 		return inventory;
 	}
 	
 //Query for Admin to update the stock_quantity of a product
-	public static void updateInventory(int quantity,int product_id) throws DataAccessException, EntityNotFoundException {
+	public static void updateInventory(int quantity,int product_id) throws DBAccessException, EntityNotFoundException {
 		String sql = "update inventory set stock_quantity = stock_quantity + ? where product_id = ?";
 		try(Connection con = DBUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
@@ -272,49 +272,49 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Inventory.");
+			throw new DBAccessException("Unable to fetch Inventory.");
 		}
 	}
 	
 //Query for Admin to view all Orders
 	
-	public static void viewOrders() throws DataAccessException{
-		String sql = "select * from `order`";
-		try(Connection con = DBUtil.getConnection();
-				Statement st = con.createStatement();
-				ResultSet rs = st.executeQuery(sql)){
-			while(rs.next()) {
-				System.out.println(rs.getInt("order_id") + " | " + rs.getInt("user_id") + " | " + 
-						rs.getTimestamp("order_date") + " | " + rs.getString("status") + " | " + rs.getDouble("total_amount"));
-			}
-		}
-		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Orders.");
-		}
-	}
+//	public static void viewOrders() throws DBAccessException{
+//		String sql = "select * from `order`";
+//		try(Connection con = DBUtil.getConnection();
+//				Statement st = con.createStatement();
+//				ResultSet rs = st.executeQuery(sql)){
+//			while(rs.next()) {
+//				System.out.println(rs.getInt("order_id") + " | " + rs.getInt("user_id") + " | " + 
+//						rs.getTimestamp("order_date") + " | " + rs.getString("status") + " | " + rs.getDouble("total_amount"));
+//			}
+//		}
+//		catch(SQLException | IOException e) {
+//			throw new DBAccessException("Unable to fetch Orders.");
+//		}
+//	}
 	
 	
 //Query for Admin to view all Payments
 	
-	public static void viewPayments() throws DataAccessException{
-		String sql = "select * from payment";
-		try(Connection con = DBUtil.getConnection();
-				Statement st = con.createStatement();
-				ResultSet rs = st.executeQuery(sql)){
-			while(rs.next()) {
-				System.out.println(rs.getInt("payment_id") + " | " + rs.getInt("order_id") + " | " + rs.getString("payment_method")
-				 + " | " + rs.getString("payment_status") + " | " + rs.getString("transaction_id") + " | " + rs.getTimestamp("payment_date"));
-			}
-		}
-		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Payments.");
-		}
-	}
+//	public static void viewPayments() throws DBAccessException{
+//		String sql = "select * from payment";
+//		try(Connection con = DBUtil.getConnection();
+//				Statement st = con.createStatement();
+//				ResultSet rs = st.executeQuery(sql)){
+//			while(rs.next()) {
+//				System.out.println(rs.getInt("payment_id") + " | " + rs.getInt("order_id") + " | " + rs.getString("payment_method")
+//				 + " | " + rs.getString("payment_status") + " | " + rs.getString("transaction_id") + " | " + rs.getTimestamp("payment_date"));
+//			}
+//		}
+//		catch(SQLException | IOException e) {
+//			throw new DBAccessException("Unable to fetch Payments.");
+//		}
+//	}
 	
 	
 //Query for Admin to Add a new discount code
 	
-	public static void createDiscount(String promo_code,double discount_percentage,String expiry_date) throws DataAccessException {
+	public static void createDiscount(String promo_code,double discount_percentage,String expiry_date) throws DBAccessException {
 		String sql = "insert into discount(promo_code,discount_percentage,expiry_date) values (?,?,?)";
 		try(Connection con = DBUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)){
@@ -324,16 +324,16 @@ public class AdminDAO {
 			ps.executeUpdate();
 			ResultSet rs = ps.getGeneratedKeys();
 	        if (!rs.next()) {
-	            throw new DataAccessException("Failed to create Discount");
+	            throw new DBAccessException("Failed to create Discount");
 	        }
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Discounts.");
+			throw new DBAccessException("Unable to fetch Discounts.");
 		}
 	}
 	
 //Query to delete a discount
-	public static void deleteDiscount(int did) throws DataAccessException,EntityNotFoundException{
+	public static void deleteDiscount(int did) throws DBAccessException,EntityNotFoundException{
 		// TODO Auto-generated method stub
 		String sql = "update discount set status='expired' where discount_id=?";
 	    try (Connection con = DBUtil.getConnection();
@@ -345,12 +345,12 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Discounts.");
+			throw new DBAccessException("Unable to fetch Discounts.");
 	    }
 	}
 	
 //Query to view all discounts
-	public static ArrayList<Discount> viewDiscounts() throws DataAccessException{
+	public static ArrayList<Discount> viewDiscounts() throws DBAccessException{
 		// TODO Auto-generated method stub
 		ArrayList<Discount> discounts = new ArrayList<>();
 		String sql = "select * from discount";
@@ -364,14 +364,14 @@ public class AdminDAO {
 	        }
 	    }
 	    catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Discounts.");
+			throw new DBAccessException("Unable to fetch Discounts.");
 		}
 		return discounts;
 	}
 	
 //Query for Admin to view support tickets
 	
-	public static ArrayList<Ticket> viewTickets() throws DataAccessException{
+	public static ArrayList<Ticket> viewTickets() throws DBAccessException{
 		ArrayList<Ticket> tickets = new ArrayList<>();
 		String sql = "select * from support_ticket";
 		try(Connection con = DBUtil.getConnection();
@@ -383,14 +383,14 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Tickets.");
+			throw new DBAccessException("Unable to fetch Tickets.");
 		}
 		return tickets;
 	}
 	
 //Query for Admin to update support ticket status
 	
-	public static void updateTicketStatus(String ticket_status,int ticket_id) throws DataAccessException,EntityNotFoundException{
+	public static void updateTicketStatus(String ticket_status,int ticket_id) throws DBAccessException,EntityNotFoundException{
 		String sql = "update support_ticket set ticket_status = ? where ticket_id = ?";
 		try(Connection con = DBUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
@@ -402,7 +402,7 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DataAccessException("Unable to fetch Discounts.");
+			throw new DBAccessException("Unable to fetch Discounts.");
 		}
 	}
 }

@@ -2,7 +2,7 @@ package ServiceLayer;
 import java.util.Scanner;
 
 import DAO.AdminDAO;
-import Exceptions.DataAccessException;
+import Exceptions.DBAccessException;
 import Exceptions.EmptyInputException;
 import Exceptions.EntityNotFoundException;
 import Exceptions.InputMismatchException;
@@ -24,7 +24,7 @@ public class AdminServices {
 		case 1:
 			AdminDAO.viewCustomers().stream()
 			.forEach(u -> 
-					System.out.println(u.getName() + " | " + u.getEmail() + " | " +u.getStatus()));
+					System.out.println("Name: " + u.getName() + " | " +"Email: " + u.getEmail() + " | " +"Status: " + u.getStatus()));
 			System.out.println();
 			break;
 			
@@ -38,7 +38,7 @@ public class AdminServices {
 			
 			return;
 			}	
-			}catch(EmptyInputException | InputMismatchException | DataAccessException | EntityNotFoundException e) {
+			}catch(EmptyInputException | InputMismatchException | DBAccessException | EntityNotFoundException e) {
 			System.out.println(e.getMessage());
 			System.out.println();
 			choice = -1;
@@ -61,7 +61,7 @@ public class AdminServices {
 			case 1:
 				AdminDAO.viewCategories().stream()
 				.forEach(c -> 
-						System.out.println(c.getCategoryID() + " | " + c.getCategoryName() + " | " + c.getDescription() + " | " + c.getStatus()));
+						System.out.println("Category ID: " + c.getCategoryID() + " | " + "Category Name: " + c.getCategoryName() + " | " + "Description: " + c.getDescription() + " | " + "Status: " + c.getStatus()));
 				System.out.println();
 				break;
 				
@@ -105,7 +105,7 @@ public class AdminServices {
 						
 					case 3:
 						cat_id = InputValidate.IntValidation(s, "Please enter Category_id to modify: ");
-						String cat_status = InputValidate.StringValidation(s, "Please enter new Category Status: ");
+						String cat_status = InputValidate.StringValidation(s, "Please enter new Category Status: ").toLowerCase();
 						while (!cat_status.equalsIgnoreCase("active") &&
 							       !cat_status.equalsIgnoreCase("inactive")) {
 							    System.out.println("status must be active or inactive");
@@ -115,7 +115,7 @@ public class AdminServices {
 						break;
 					case 4:
 						break;
-					}}catch(EmptyInputException | InputMismatchException |DataAccessException e) {
+					}}catch(EmptyInputException | InputMismatchException |DBAccessException e) {
 						System.out.println(e.getMessage());
 						System.out.println();
 						modify_choice = -1;
@@ -125,7 +125,7 @@ public class AdminServices {
 			case 5:
 				return;
 			}
-			}catch(EmptyInputException | InputMismatchException |DataAccessException e) {
+			}catch(EmptyInputException | InputMismatchException |DBAccessException e) {
 				System.out.println(e.getMessage());
 				System.out.println();
 				choice = -1;
@@ -175,14 +175,14 @@ public class AdminServices {
 			case 4:
 				AdminDAO.viewProducts().stream()
 				.forEach(p -> 
-						System.out.println(p.getProductID() + " | " + p.getCategoryID() + " | " + p.getName() + " | " + p.getBrand()
-						 + " | " + p.getPrice() + " | " + p.getDescription() + " | " + p.getURL() + " | " + p.getStatus()));
+						System.out.println("Product ID: " + p.getProductID() + " | " + "Category ID: " + p.getCategoryID() + " | " + "Product Name: " + p.getName() + " | " + "Brand: " + p.getBrand()
+						 + " | " + "Price: " + p.getPrice() + " | " + "Description: " + p.getDescription() + " | " + "Image: " + p.getURL() + " | " + "Status: " + p.getStatus()));
 				System.out.println();
 				break;
 				
 			case 5:
 				return;
-			}}catch(EmptyInputException | InputMismatchException |DataAccessException e) {
+			}}catch(EmptyInputException | InputMismatchException |DBAccessException e) {
 				System.out.println(e.getMessage());
 				System.out.println();
 				choice = -1;
@@ -206,7 +206,7 @@ public class AdminServices {
 				
 				AdminDAO.viewInventory().stream()
 				.forEach(i ->
-						System.out.println(i.getInventoryID() + " | " + i.getProductID()+"."+i.getPName() + " | " + "Stock Quantity: "+i.getQuantity()));
+						System.out.println("Inventory ID: " + i.getInventoryID() + " | " + "Product ID: " + i.getProductID() + " | " + "Product Name: " + i.getPName() + " | " + "Stock Quantity: "+i.getQuantity()));
 				System.out.println();
 				break;
 				
@@ -223,7 +223,7 @@ public class AdminServices {
 			case 3:
 				return;
 			}
-			}catch(EmptyInputException | InputMismatchException |DataAccessException e) {
+			}catch(EmptyInputException | InputMismatchException |DBAccessException e) {
 				System.out.println(e.getMessage());
 				System.out.println();
 				choice = -1;
@@ -263,14 +263,14 @@ public class AdminServices {
 		case 3:
 			AdminDAO.viewDiscounts().stream()
 			.forEach(d -> 
-			System.out.println(d.getDID() + " | " + d.getCode() + " | " + d.getDPT() + " | " + d.getExpDate() + " | " + d.getStatus()));
+			System.out.println("Discount ID: " + d.getDID() + " | " + "Promo Code: " + d.getCode() + " | " + "Discount Percentage: " + d.getDPT() + " | " + "Expiry Date: " +  d.getExpDate() + " | " + "Status: " + d.getStatus()));
 			System.out.println();
             break;
             
 		case 4:
 			return;
 		}
-			}catch(EmptyInputException | InputMismatchException |DataAccessException e) {
+			}catch(EmptyInputException | InputMismatchException |DBAccessException e) {
 				System.out.println(e.getMessage());
 				System.out.println();
 				choice = -1;
@@ -293,8 +293,8 @@ public class AdminServices {
 	            case 1:
 	                AdminDAO.viewTickets().stream()
 	                .forEach(t -> 
-	                System.out.println(t.getTID() + " | " + t.getUID() + " | " + t.getOID()
-	                + " | " + t.getIssueType() + " | " + t.getDesc() + " | " + t.getTicketStatus() + " | " + t.getDate()));
+	                System.out.println("Ticket ID: " + t.getTID() + " | " + "User ID: " + t.getUID() + " | " + "Order ID: " + t.getOID()
+	                + " | " + "Issue Type: " + t.getIssueType() + " | " + "Description: " +  t.getDesc() + " | " + "Ticket Status: " + t.getTicketStatus() + " | " + "Created Date: " + t.getDate()));
 	                break;
 
 	            case 2:
@@ -310,7 +310,7 @@ public class AdminServices {
 	            case 3:
 	                return;
 	        }
-	    	}catch(EmptyInputException | InputMismatchException |DataAccessException e) {
+	    	}catch(EmptyInputException | InputMismatchException |DBAccessException e) {
 				System.out.println(e.getMessage());
 				System.out.println();
 				choice = -1;

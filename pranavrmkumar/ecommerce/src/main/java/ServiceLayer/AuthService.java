@@ -1,19 +1,28 @@
 package ServiceLayer;
 
 import DAO.AuthDAO;
-import Exceptions.DataAccessException;
+import Exceptions.DBAccessException;
 import Exceptions.InvalidCredentialsException;
-import Model.User;
+import Model.Admin;
+import Model.Customer;
 
 public class AuthService {
 	
 	//admin login
-	public static User adminLogin(String email,String password) throws DataAccessException,InvalidCredentialsException{
-		User admin = AuthDAO.adminLogin(email, password);
+	public static Admin adminLogin(String email,String password) throws DBAccessException,InvalidCredentialsException{
+		Admin admin = AuthDAO.adminLogin(email, password);
 		
 		if(admin == null) {
 			throw new InvalidCredentialsException("Invalid Credentials");
 		}
 		return admin;
 	}
+	
+	
+	//Customer login
+	public static Customer customerLogin(String email, String password)
+            throws InvalidCredentialsException, DBAccessException {
+
+        return AuthDAO.customerLogin(email, password);
+    }
 }

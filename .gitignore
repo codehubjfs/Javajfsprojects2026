@@ -27,3 +27,11 @@ pranavrmkumar/ecommerce/target/classes/Model/Admin.class
 pranavrmkumar/ecommerce/target/classes/Model/Customer.class
 pranavrmkumar/ecommerce/target/classes/ServiceLayer/AuthService.class
 pranavrmkumar/ecommerce/target/classes/UI/LoginUI.class
+pranavrmkumar/ecommerce/target/classes/DAO/CustomerDAO$OrderMeta.class
+pranavrmkumar/ecommerce/target/classes/DAO/CustomerDAO.class
+pranavrmkumar/ecommerce/target/classes/DAO/UserDAO.class
+pranavrmkumar/ecommerce/target/classes/Exceptions/DBAccessException.class
+pranavrmkumar/ecommerce/target/classes/Model/CartItem.class
+pranavrmkumar/ecommerce/target/classes/Model/Order.class
+pranavrmkumar/ecommerce/target/classes/ServiceLayer/CustomerServices.class
+pranavrmkumar/ecommerce/target/classes/UI/Customer.class
