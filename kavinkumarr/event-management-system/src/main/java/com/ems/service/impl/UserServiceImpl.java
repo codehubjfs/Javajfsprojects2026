@@ -2,335 +2,168 @@ package com.ems.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.logging.Logger;
 
 import com.ems.dao.RoleDao;
 import com.ems.dao.UserDao;
+import com.ems.enums.UserRole;
 import com.ems.exception.AuthorizationException;
 import com.ems.exception.DataAccessException;
 import com.ems.exception.InvalidPasswordFormatException;
 import com.ems.exception.AuthenticationException;
-import com.ems.menu.AdminMenu;
-import com.ems.menu.OrganizerMenu;
-import com.ems.menu.UserMenu;
 import com.ems.model.Role;
 import com.ems.model.User;
-import com.ems.service.EventService;
+import com.ems.service.SystemLogService;
 import com.ems.service.UserService;
-import com.ems.util.InputValidationUtil;
 import com.ems.util.PasswordUtil;
-import com.ems.util.ScannerUtil;
 
+/*
+ * Handles user authentication and account management.
+ *
+ * Responsibilities:
+ * - Authenticate users during login
+ * - Create new user accounts with role assignment
+ * - Validate user credentials and account status
+ * - Provide user role and existence checks
+ */
 public class UserServiceImpl implements UserService {
 
-    private final UserDao userDao;
-    private final RoleDao roleDao;
-    private final EventService eventService;
+	private final UserDao userDao;
+	private final RoleDao roleDao;
+	private final SystemLogService systemLogService;
 
-    private static final Logger logger =
-            Logger.getLogger(UserServiceImpl.class.getName());
+	public UserServiceImpl(UserDao userDao, RoleDao roleDao, SystemLogService systemLogService) {
+		this.userDao = userDao;
+		this.roleDao = roleDao;
+		this.systemLogService = systemLogService;
+	}
 
-    public UserServiceImpl(
-            UserDao userDao,
-            RoleDao roleDao,
-            EventService eventService
-    ) {
-        this.userDao = userDao;
-        this.roleDao = roleDao;
-        this.eventService = eventService;
-    }
+	/*
+	 * Authenticates a user using email and password.
+	 *
+	 * Rules: - Email must exist - Password must match stored hash - Suspended
+	 * accounts are not allowed to log in
+	 */
+	@Override
+	public User login(String emailId, String password)
+	        throws AuthorizationException, AuthenticationException {
 
-    @Override
-    public User login() throws AuthorizationException, AuthenticationException {
-
-        String emailId =
-            InputValidationUtil.readString(
-                ScannerUtil.getScanner(),
-                "Enter the email address: "
-            );
-
-        while (!emailId.matches(
-                "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
-
-            emailId =
-                InputValidationUtil.readString(
-                    ScannerUtil.getScanner(),
-                    "Enter the valid email address: "
-                );
-        }
-
-        String password =
-            InputValidationUtil.readString(
-                ScannerUtil.getScanner(),
-                "Enter the password: "
-            );
-
-        while (!password.matches(
-                "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$")) {
-
-            password =
-                InputValidationUtil.readString(
-                    ScannerUtil.getScanner(),
-                    "Enter the password in the valid format: "
-                );
-        }
-        try {
+	    try {
 	        User user = userDao.findByEmail(emailId.toLowerCase());
-	
+
 	        if (user == null) {
-	            throw new AuthorizationException("Invalid email address!");
+	            throw new AuthorizationException("Account not found. Please register first.");
 	        }
-            if (!PasswordUtil.verifyPassword(
-                    password, user.getPasswordHash())) {
 
-                throw new AuthenticationException("Invalid credentials");
-            }else if(user.getStatus().toString().equalsIgnoreCase("suspended")) {
-            	throw new AuthorizationException("\nYour account has been suspended!\ncontact admin@ems.com for more info");
-            }
+	        if ("SUSPENDED".equalsIgnoreCase(user.getStatus())) {
+	        	systemLogService.log(
+                	    user.getUserId(),
+                	    "LOGIN_BLOCKED",
+                	    "USER",
+                	    user.getUserId(),
+                	    "Login attempt blocked. Account is suspended"
+                	);
+	            throw new AuthorizationException(
+	                "\nYour account has been suspended!\ncontact admin@ems.com for more info"
+	            );
+	        }
 
-            System.out.println("Logged in as: " + emailId);
+	        if (!PasswordUtil.verifyPassword(password, user.getPasswordHash())) {
+	        	systemLogService.log(
+	        		    user.getUserId(),
+	        		    "LOGIN_FAILED",
+	        		    "USER",
+	        		    user.getUserId(),
+	        		    "Invalid password attempt"
+	        		);
 
-            int role = getRole(user);
+	            userDao.incrementFailedAttempts(user.getUserId());
 
-            if (role == 1) {
-                AdminMenu adminMenu = new AdminMenu(user);
-                adminMenu.start();
-            } else if (role == 2) {
-                UserMenu userMenu = new UserMenu(user);
-                userMenu.start();
-            } else if (role == 3) {
-                OrganizerMenu organizerMenu = new OrganizerMenu(user);
-                organizerMenu.start();
-            } else {
-                logger.warning("Unexpected role");
-            }
+	            if (user.getFailedAttempts() + 1 >= 3) {
+	                userDao.updateUserStatus(user.getUserId(), "SUSPENDED");
+	                systemLogService.log(
+	                	    user.getUserId(),
+	                	    "ACCOUNT_SUSPENDED",
+	                	    "USER",
+	                	    user.getUserId(),
+	                	    "Account suspended due to multiple failed login attempts"
+	                	);
 
-            return user;
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+	                throw new AuthorizationException(
+	                    "Account suspended due to multiple failed login attempts\ncontact admin@ems.com for more info"
+	                );
+	            }
 
-        return null;
-    }
+	            throw new AuthenticationException("Invalid credentials");
+	        }
 
-    @Override
-    public void createAccount(int i) {
+	        userDao.resetFailedAttempts(user.getUserId());
 
-        String fullName =
-            InputValidationUtil.readNonEmptyString(
-                ScannerUtil.getScanner(),
-                "Enter Full Name: "
-            );
+	        System.out.println("\nWelcome, " + user.getFullName());
+	        return user;
 
-        String email =
-            InputValidationUtil.readNonEmptyString(
-                ScannerUtil.getScanner(),
-                "Enter Email Address: "
-            );
+	    } catch (DataAccessException e) {
+	        throw new AuthenticationException("Login failed");
+	    }
+	}
 
-        while (!email.matches(
-                "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
 
-            email =
-                InputValidationUtil.readNonEmptyString(
-                    ScannerUtil.getScanner(),
-                    "Enter valid Email Address: "
-                );
-        }
+	/*
+	 * Creates a new user account with the specified role.
+	 *
+	 * Rules: - Role must exist in the system - Password must meet security
+	 * requirements before hashing
+	 */
+	@Override
+	public void createAccount(String fullName, String email, String phone, String password, String gender,
+			UserRole role) {
 
-        String phone =
-            InputValidationUtil.readString(
-                ScannerUtil.getScanner(),
-                "Enter Phone Number: "
-            );
+		try {
+			List<Role> roles = roleDao.getRoles();
+			Role selectedRole = roles.stream().filter(r -> r.getRoleName().equalsIgnoreCase(role.toString()))
+					.findFirst().orElse(null);
 
-        if (phone.trim().isEmpty()) {
-            phone = null;
-        }
+			if (selectedRole != null) {
 
-        String passwordPrompt =
-            "Enter Password (Min 8 chars, 1 Digit, 1 Upper, 1 Lower, 1 Special [!@#$%^&*]): ";
+				String hashedPassword = PasswordUtil.hashPassword(password);
 
-        String password =
-            InputValidationUtil.readNonEmptyString(
-                ScannerUtil.getScanner(),
-                passwordPrompt
-            );
+				userDao.createUser(fullName, email, phone, hashedPassword, selectedRole.getRoleId(), "ACTIVE",
+						LocalDateTime.now(), null, gender);
 
-        while (!password.matches(
-                "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$")) {
-
-            password =
-                InputValidationUtil.readNonEmptyString(
-                    ScannerUtil.getScanner(),
-                    "Weak password! " + passwordPrompt
-                );
-        }
-
-        int genderChoice;
-        do {
-            genderChoice =
-                InputValidationUtil.readInt(
-                    ScannerUtil.getScanner(),
-                    "Enter your gender:\n1. Male\n2. Female\n3. Prefer not to say\n"
-                );
-        } while (genderChoice < 1 || genderChoice > 3);
-
-        String gender =
-            (genderChoice == 1)
-                ? "Male"
-                : (genderChoice == 2)
-                    ? "Female"
-                    : "Prefer not to say";
-        try {
-        List<Role> roles = roleDao.getRoles();
-        roles.sort(
-        	    (r1, r2) -> r1.getRoleName().compareToIgnoreCase(r2.getRoleName())
-        	);
-        String targetRoleName =
-            (i == 1) ? "ATTENDEE" : "ORGANIZER";
-
-        Role selectedRole =
-            roles.stream()
-                .filter(r ->
-                    r.getRoleName().equalsIgnoreCase(targetRoleName))
-                .findFirst()
-                .orElse(null);
-
-        if (selectedRole != null) {
-            
-                String hashedPassword =
-                    PasswordUtil.hashPassword(password);
-
-                userDao.createUser(
-                    fullName,
-                    email,
-                    phone,
-                    hashedPassword,
-                    selectedRole.getRoleId(),
-                    "ACTIVE",
-                    LocalDateTime.now(),
-                    null,
-                    gender
-                );
-
-                System.out.println(
-                    "Account created successfully as "
-                    + selectedRole.getRoleName()
-                    + " for: "
-                    + fullName
-                );
-        } else {
-            System.err.println(
-                "Error: The role '" + targetRoleName + "' was not found in the database."
-            );
-        }
-        }catch(DataAccessException e) {
-        	System.out.println(e.getMessage());
-        } catch (InvalidPasswordFormatException e) {
-        	System.out.println(e.getMessage());
+			} else {
+				System.out.println("Error: The role '" + role.toString() + "' was not found in the database.");
+			}
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		} catch (InvalidPasswordFormatException e) {
+			System.out.println(e.getMessage());
 		}
-    }
+	}
 
-    @Override
-    public int getRole(User user) {
-        try {
+	/*
+	 * Retrieves the role associated with the given user.
+	 */
+	@Override
+	public UserRole getRole(User user) {
+		try {
 			return userDao.getRole(user);
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
-        return 0;
-    }
+		return null;
+	}
 
-    @Override
-    public void printAllAvailableEvents() {
-        eventService.printAllAvailableEvents();
-    }
+	/*
+	 * Checks whether a user already exists based on email.
+	 */
+	@Override
+	public boolean checkUserExists(String email) {
+		try {
+			return userDao.checkUserExists(email);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+	}
 
-    @Override
-    public void viewTicketOptions() {
-        eventService.viewTicketOptions();
-    }
-
-    @Override
-    public void viewEventDetails() {
-        eventService.viewEventDetails();
-    }
-
-    @Override
-    public void registerForEvent(int userId) {
-        eventService.registerForEvent(userId);
-    }
-
-    @Override
-    public void viewUpcomingEvents(int userId) {
-        eventService.viewUpcomingEvents(userId);
-    }
-
-    @Override
-    public void viewPastEvents(int userId) {
-        eventService.viewPastEvents(userId);
-    }
-
-    @Override
-    public void viewBookingDetails(int userId) {
-        eventService.viewBookingDetails(userId);
-    }
-
-    @Override
-    public void submitRating(int userId) {
-        eventService.submitRating(userId);
-    }
-
-    @Override
-    public void submitReview(int userId) {
-        eventService.submitRating(userId);
-    }
-
-    @Override
-    public void searchEvents() {
-        while (true) {
-            System.out.println(
-                "\nEnter your choice:\n"
-              + "1. Search by category\r\n"
-              + "2. Search by date\r\n"
-              + "3. Search by date range\n"
-              + "4. Search by city\r\n"
-              + "5. Filter by price\r\n"
-              + "6. Filter by availability\r\n"
-              + "7. Exit to user menu\n"
-            );
-
-            int filterChoice =
-                InputValidationUtil.readInt(
-                    ScannerUtil.getScanner(), ""
-                );
-
-            switch (filterChoice) {
-                case 1 :
-                	eventService.searchBycategory();
-                	break;
-                case 2 :
-                	eventService.searchByDate();
-                	break;
-                case 3 :
-                	eventService.searchByDateRange();
-                	break;
-                case 4 :
-                	eventService.searchByCity();
-                	break;
-                case 5 :
-                	eventService.filterByPrice();
-                	break;
-                case 6 :
-                	eventService.printAllAvailableEvents();
-                	break;
-                case 7 :
-                	return;
-                default :
-                	System.out.println("Enter the valid option");
-            }
-        }
-    }
 }

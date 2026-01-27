@@ -1,65 +1,91 @@
 package com.ems.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
+import com.ems.enums.PaymentMethod;
+import com.ems.model.BookingDetail;
+import com.ems.model.Category;
 import com.ems.model.Event;
+import com.ems.model.Ticket;
+import com.ems.model.UserEventRegistration;
+import com.ems.model.Venue;
 
 public interface EventService {
 
-    void viewEventDetails();
+	// ticket information
+	List<Ticket> getTicketTypes(int eventId);
 
-    void viewTicketOptions();
+	int getAvailableTickets(int eventId);
 
-    void filterByPrice();
+	
+	// event filtering
+	List<Event> filterByPrice(double minPrice, double maxPrice);
 
-    void searchByCity();
+	List<Event> searchByCity(int venueId);
 
-    void searchByDate();
+	List<Event> searchByDate(LocalDate localDate);
 
-    void searchByDateRange();
+	List<Event> searchByDateRange(LocalDate startDate, LocalDate endDate);
 
-    void searchBycategory();
+	List<Event> searchBycategory(int selectedCategoryId);
 
-    void registerForEvent(int userId);
+	
+	// event registration and booking
+	boolean registerForEvent(
+		    int userId,
+		    int eventId,
+		    int ticketId,
+		    int quantity,
+		    double price,
+		    PaymentMethod paymentMethod,
+		    String offerCode
+		);
 
-    void viewUpcomingEvents(int userId);
+	List<BookingDetail> viewBookingDetails(int userId);
 
-    void viewPastEvents(int userId);
+	
+	// user event history
+	List<UserEventRegistration> viewUpcomingEvents(int userId);
 
-    void viewBookingDetails(int userId);
+	List<UserEventRegistration> viewPastEvents(int userId);
 
-    void submitRating(int userId);
+	
+	// feedback
+	void submitRating(int userId, int eventId, int rating, String comments);
 
-    // Organizer functions
-    void createTicket();
+	
+	// Event listing & retrival
+	List<Event> getAllEvents();
 
-    void updateTicketPrice();
+	List<Event> listAvailableEvents();
 
-    void updateTicketQuantity();
+	List<Event> listEventsYetToApprove();
 
-    void viewTicketAvailability();
+	List<Event> listAvailableAndDraftEvents();
 
-    void createEvent();
+	Event getEventById(int eventId);
 
-    void updateEventDetails();
+	
+	// Category & city lookups
+	Category getCategory(int eventId);
 
-    void updateEventSchedule();
+	List<Category> getAllCategory();
 
-    void updateEventCapacity();
+	Map<Integer, String> getAllCities();
 
-    void publishEvent();
+	
+	// Venue information & availability
+	String getVenueName(int venueId);
 
-    void cancelEvent();
+	String getVenueAddress(int venueId);
 
-    // Admin functions
-    void completeEvents();
+	List<Venue> getAllVenues();
 
-    // Display functions
-    void printAllAvailableEvents();
+	Venue getVenueById(int venueId);
 
-    void printAllEvents();
+	boolean isVenueAvailable(int venueId, LocalDateTime startTime, LocalDateTime endTime);
 
-    void printEventDetails(List<Event> events);
-
-    void printEventSummaries(List<Event> events);
 }

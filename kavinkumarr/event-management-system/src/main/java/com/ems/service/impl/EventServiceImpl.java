@@ -1,5 +1,6 @@
 package com.ems.service.impl;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,685 +10,504 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.ems.dao.*;
+import com.ems.enums.PaymentMethod;
 import com.ems.exception.DataAccessException;
 import com.ems.model.BookingDetail;
 import com.ems.model.Event;
 import com.ems.model.Ticket;
+import com.ems.model.Category;
+import com.ems.model.UserEventRegistration;
+import com.ems.model.Venue;
 import com.ems.service.EventService;
 import com.ems.service.PaymentService;
+import com.ems.service.SystemLogService;
 import com.ems.util.DateTimeUtil;
-import com.ems.util.InputValidationUtil;
-import com.ems.util.ScannerUtil;
+
+/*
+ * Handles event related business operations.
+ *
+ * Responsibilities:
+ * - Event discovery and filtering
+ * - Event registration and booking flow
+ * - Venue, category, and ticket lookups
+ * - Feedback submission
+ */
 
 public class EventServiceImpl implements EventService {
 
-    private final EventDao eventDao;
-    private final CategoryDao categoryDao;
-    private final VenueDao venueDao;
-    private final TicketDao ticketDao;
-    private final PaymentService paymentService;
+	private final EventDao eventDao;
+	private final CategoryDao categoryDao;
+	private final VenueDao venueDao;
+	private final TicketDao ticketDao;
+	private final PaymentService paymentService;
+	private final FeedbackDao feedbackDao;
+	private final SystemLogService systemLogService;
 
-    public EventServiceImpl(
-            EventDao eventDao,
-            CategoryDao categoryDao,
-            VenueDao venueDao,
-            TicketDao ticketDao,
-            PaymentService paymentService
-    ) {
-        this.eventDao = eventDao;
-        this.categoryDao = categoryDao;
-        this.venueDao = venueDao;
-        this.ticketDao = ticketDao;
-        this.paymentService = paymentService;
-    }
+	/*
+	 * Initializes EventService with required data access and payment dependencies.
+	 */
 	
-    
-	//details fetch functions
-    @Override
-	public void viewEventDetails() {
-
-    	List<Event> events = new ArrayList<>();
-		try {
-			events = eventDao.listAvailableEvents();
-			if (events.isEmpty()) {
-			    System.out.println("There are no available events!");
-			    return;
-			}
-		} catch (DataAccessException e) {
-			System.out.println(e.getMessage());
-		}
-    	printEventSummaries(events);
-    	int choice = InputValidationUtil.readInt(
-	    	    ScannerUtil.getScanner(),
-	    	    "Select an event (1-" + events.size() + "): "
-	    	    
-    	);
-    	while (choice < 1 || choice > events.size()) {
-    	    choice = InputValidationUtil.readInt(
-    	        ScannerUtil.getScanner(),
-    	        "Enter a valid choice: "
-    	    );
-    	}
-    	Event selectedEvent = events.get(choice - 1);
-    	printEventDetails(selectedEvent);
+	public EventServiceImpl(EventDao eventDao, CategoryDao categoryDao, VenueDao venueDao, TicketDao ticketDao,
+			PaymentService paymentService, FeedbackDao feedbackDao, SystemLogService systemLogService) {
+		this.eventDao = eventDao;
+		this.categoryDao = categoryDao;
+		this.venueDao = venueDao;
+		this.ticketDao = ticketDao;
+		this.paymentService = paymentService;
+		this.feedbackDao = feedbackDao;
+		this.systemLogService = systemLogService;
 	}
-    @Override
-	public  void viewTicketOptions() {
-		List<Event> events = null;
-		try {
-			events = eventDao.listAvailableEvents();
-		} catch (DataAccessException e) {
-			System.out.println(e.getMessage());
-		}
-		if(events.isEmpty()) {
-			System.out.println("There are no available events!");
-			return;
-		}
-		printEventSummaries(events);
-		int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Select event number: ");
-		while (choice < 1 || choice > events.size()) {
-		    choice = InputValidationUtil.readInt(
-		        ScannerUtil.getScanner(),
-		        "Enter a valid choice: "
-		    );
-		}
-		Event selectedEvent = events.get(choice - 1);
-		int eventId = selectedEvent.getEventId();
 
+	/*
+	 * Retrieves all available ticket types for a given event.
+	 */
+	@Override
+	public List<Ticket> getTicketTypes(int eventId) {
 		List<Ticket> tickets = new ArrayList<>();
 		try {
 			tickets = ticketDao.getTicketTypes(eventId);
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
-		if(!tickets.isEmpty()) {
-			System.out.println("\nAvailable ticekt types: ");
-			tickets.forEach(t -> System.out.println(t));
-		}else {
-			System.out.println("No ticket types for the given event id");
-			return;
-		}
-		
+		return tickets;
 	}
-    @Override
-	public  void filterByPrice() {
-		double minPrice = InputValidationUtil.readDouble(ScannerUtil.getScanner(), "Enter the minimum price: ");
-		double maxPrice = InputValidationUtil.readDouble(ScannerUtil.getScanner(), "Enter the maximum price: ");
-		
+
+	/*
+	 * Filters events based on ticket price range.
+	 *
+	 * Rule: - Event is included if any ticket falls within the price range
+	 */
+	@Override
+	public List<Event> filterByPrice(double minPrice, double maxPrice) {
+
+		List<Event> filteredEvents = new ArrayList<>();
+		try {
+			List<Event> allEvents = eventDao.listAvailableEvents();
+
+			filteredEvents = allEvents.stream().filter(event -> {
+				List<Ticket> tickets = new ArrayList<>();
+				try {
+					tickets = ticketDao.getTicketTypes(event.getEventId());
+				} catch (DataAccessException e) {
+					System.out.println(e.getMessage());
+				}
+
+				return tickets.stream().anyMatch(t -> t.getPrice() >= minPrice && t.getPrice() <= maxPrice);
+			}).collect(Collectors.toList());
+			return filteredEvents;
+
+		} catch (DataAccessException e) {
+			System.out.println("Database error: " + e.getMessage());
+		}
+		return filteredEvents;
+	}
+
+	/*
+	 * Retrieves a single event by its identifier.
+	 */
+	@Override
+	public Event getEventById(int eventId) {
+		Event event = new Event();
+		try {
+			event = eventDao.getEventById(eventId);
+		} catch (DataAccessException e) {
+			System.out.println("Database error: " + e.getMessage());
+		}
+		return event;
+	}
+
+	/*
+	 * Searches events based on venue location.
+	 */
+	@Override
+	public List<Event> searchByCity(int venueId) {
+		List<Event> filteredEvents = new ArrayList<>();
+		try {
+			List<Event> allEvents = eventDao.listAvailableEvents();
+			filteredEvents = allEvents.stream().filter(e -> e.getVenueId() == venueId).collect(Collectors.toList());
+			return filteredEvents;
+		} catch (DataAccessException e) {
+			System.out.println("Database error: " + e.getMessage());
+		}
+		return filteredEvents;
+	}
+
+	/*
+	 * Searches events occurring before the given date.
+	 */
+	@Override
+	public List<Event> searchByDate(LocalDate localDate) {
+		List<Event> filteredEvents = new ArrayList<>();
+		try {
+			List<Event> allEvents = eventDao.listAvailableEvents();
+			filteredEvents = allEvents.stream().filter(e -> e.getStartDateTime().toLocalDate().isBefore(localDate))
+					.collect(Collectors.toList());
+		} catch (DataAccessException e) {
+			System.out.println("Database error: " + e.getMessage());
+		}
+		return filteredEvents;
+	}
+
+	/*
+	 * Searches events within a specified date range.
+	 *
+	 * Rule: - Start date must be before or equal to end date
+	 */
+	@Override
+	public List<Event> searchByDateRange(LocalDate startDate, LocalDate endDate) {
+		List<Event> filteredEvents = new ArrayList<>();
+		if (startDate.isAfter(endDate)) {
+			System.out.println("Error: Start date cannot be after end date.");
+			return filteredEvents;
+		}
+
+		try {
+			List<Event> allEvents = eventDao.listAvailableEvents();
+
+			filteredEvents = allEvents.stream().filter(e -> {
+				LocalDate eventDate = e.getStartDateTime().toLocalDate();
+				return !eventDate.isBefore(startDate) && !eventDate.isAfter(endDate);
+			}).collect(Collectors.toList());
+
+			return filteredEvents;
+		} catch (DataAccessException e) {
+			System.out.println("Database error: " + e.getMessage());
+		}
+		return filteredEvents;
+	}
+
+	/*
+	 * Searches events by category.
+	 */
+	@Override
+	public List<Event> searchBycategory(int selectedCategoryId) {
+		List<Event> filteredEvents = new ArrayList<>();
+
+		try {
+			List<Event> allEvents = eventDao.listAvailableEvents();
+			filteredEvents = allEvents.stream().filter(e -> e.getCategoryId() == selectedCategoryId)
+					.collect(Collectors.toList());
+
+		} catch (DataAccessException e) {
+			System.out.println("Database error: " + e.getMessage());
+		}
+		return filteredEvents;
+
+	}
+
+	/*
+	 * Registers a user for an event and initiates payment.
+	 *
+	 * Rule: - Registration succeeds only if payment is successful
+	 */
+	@Override
+	public boolean registerForEvent(
+	        int userId,
+	        int eventId,
+	        int ticketId,
+	        int quantity,
+	        double price,
+	        PaymentMethod paymentMethod,
+	        String offerCode) {
+
 	    try {
-	        List<Event> allEvents = eventDao.listAvailableEvents();
+	    	boolean success = paymentService.processRegistration(
+	    		    userId,
+	    		    eventId,
+	    		    ticketId,
+	    		    quantity,
+	    		    price,
+	    		    paymentMethod,
+	    		    offerCode
+	    		);
 
-	        List<Event> filteredEvents = allEvents.stream()
-	            .filter(event -> {
-	                List<Ticket> tickets = new ArrayList<>();
-					try {
-						tickets = ticketDao.getTicketTypes(event.getEventId());
-					} catch (DataAccessException e) {
-						System.out.println(e.getMessage());
-					}
-	                
-	                return tickets.stream()
-	                    .anyMatch(t -> t.getPrice() >= minPrice && 
-	                                   t.getPrice() <= maxPrice);
-	            })
-	            .collect(Collectors.toList());
-            if(filteredEvents.isEmpty()) {
-            	System.out.println("No events available on given range!");
-            }else {
-            	System.out.println("--- Events found: " + filteredEvents.size() + " ---");
-    	        filteredEvents.forEach(e -> printEventDetails(e));
-            }
+	    		if (success) {
+	    		    systemLogService.log(
+	    		        userId,
+	    		        "REGISTER",
+	    		        "EVENT",
+	    		        eventId,
+	    		        "User registered for event using ticket " + ticketId +
+	    		        (offerCode != null ? " with offer code " + offerCode : "")
+	    		    );
+	    		}
 
-	    } catch (DataAccessException e) {
-	        System.err.println("Database error: " + e.getMessage());
+	    		return success;
+
+	    } catch (Exception e) {
+	        System.out.println("Error during registration: " + e.getMessage());
+	        return false;
 	    }
 	}
 
-    @Override
-	public  void searchByCity() {
+	/*
+	 * Retrieves upcoming events for a user.
+	 */
+	@Override
+	public List<UserEventRegistration> viewUpcomingEvents(int userId) {
+		List<UserEventRegistration> upcoming = new ArrayList<>();
+		try {
+			List<UserEventRegistration> registrations = eventDao.getUserRegistrations(userId);
+
+			upcoming = registrations.stream().filter(r -> r.getStartDateTime().isAfter(LocalDateTime.now())).toList();
+
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return upcoming;
+	}
+
+	/*
+	 * Retrieves past events attended by a user.
+	 */
+	@Override
+	public List<UserEventRegistration> viewPastEvents(int userId) {
+		List<UserEventRegistration> past = new ArrayList<>();
+		try {
+			List<UserEventRegistration> registrations = eventDao.getUserRegistrations(userId);
+			past = registrations.stream().filter(r -> r.getStartDateTime().isBefore(LocalDateTime.now())).toList();
+
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return past;
+	}
+
+	/*
+	 * Retrieves booking details for a user's registrations.
+	 */
+	@Override
+	public List<BookingDetail> viewBookingDetails(int userId) {
+		List<BookingDetail> bookings = new ArrayList<>();
+		try {
+			bookings = eventDao.viewBookingDetails(userId);
+			return bookings;
+
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return bookings;
+	}
+
+	/*
+	 * Submits user feedback for a completed event.
+	 */
+	@Override
+	public void submitRating(int userId, int eventId, int rating, String comments) {
+		try {
+			if (comments.trim().isBlank()) {
+				comments = null;
+			}
+			feedbackDao.submitRating(eventId, userId, rating, comments);
+
+			systemLogService.log(
+			    userId,
+			    "SUBMIT_FEEDBACK",
+			    "EVENT",
+			    eventId,
+			    "User submitted rating: " + rating
+			);
+
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+	/*
+	 * Retrieves all events regardless of status.
+	 */
+	@Override
+	public List<Event> getAllEvents() {
+		List<Event> events = new ArrayList<>();
+		try {
+			events = eventDao.listAllEvents();
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		if (events.isEmpty()) {
+			System.out.println("There are no events!");
+			return events;
+		}
+		return events;
+	}
+
+	/*
+	 * Retrieves category details for an event.
+	 */
+	@Override
+	public Category getCategory(int categoryId) {
+		Category category = null;
+		try {
+			category = categoryDao.getCategory(categoryId);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return category;
+	}
+
+	/*
+	 * Returns total available tickets for an event.
+	 */
+	@Override
+	public int getAvailableTickets(int eventId) {
+		try {
+			return ticketDao.getAvailableTickets(eventId);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return 0;
+
+	}
+
+	/*
+	 * Retrieves venue name for display.
+	 */
+	@Override
+	public String getVenueName(int venueId) {
+		try {
+			return venueDao.getVenueName(venueId);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return "";
+	}
+
+	/*
+	 * Retrieves venue address for display.
+	 */
+	@Override
+	public String getVenueAddress(int venueId) {
+		try {
+			return venueDao.getVenueAddress(venueId);
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return "";
+	}
+
+	/*
+	 * Retrieves all available categories.
+	 */
+	@Override
+	public List<Category> getAllCategory() {
+		List<Category> categories = new ArrayList<>();
+		try {
+			categories = categoryDao.getAllCategories();
+			return categories;
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+
+		return categories;
+	}
+
+	/*
+	 * Retrieves all cities where venues are available.
+	 */
+	@Override
+	public Map<Integer, String> getAllCities() {
 		Map<Integer, String> cities = new HashMap<>();
 		try {
 			cities = venueDao.getAllCities();
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
-		if(!cities.isEmpty()) {
-			cities.forEach((key, value) -> System.out.println(key + ". " + value));
-		}else {
-			System.out.println("No cities found!");
-			return;
-		}
-		int cityId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the city id:");
-		while(!cities.containsKey(cityId)) {			
-			cityId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the valid city id:");
-		}
-		final int selectedCityId = cityId;
-		//java requires it to be final to ensure that the value the Lambda "sees" is the same value that actually exists in your code.
-		try {
-			List<Event> allEvents = eventDao.listAvailableEvents();
-			List<Event> filteredEvents = allEvents.stream().filter(e-> e.getVenueId() == selectedCityId).collect(Collectors.toList());
-			if (filteredEvents.isEmpty()) {
-			    System.out.println("No events found for the selected city.");
-			} else {
-	            System.out.println("--- Events found: " + filteredEvents.size() + " ---");
-
-			    filteredEvents.forEach(e -> printEventDetails(e));
-			}
-
-		} catch (DataAccessException e) {
-			System.err.println("Database error: " + e.getMessage());
-		}
-		
-	}
-    @Override
-	public void searchByDate() {
-		LocalDate localDate = DateTimeUtil.getLocalDate("Enter the date to get available event from the given date:");
-		
-		try {
-			List<Event> allEvents = eventDao.listAvailableEvents();
-			List<Event> filteredEvents = allEvents.stream().filter(e -> e.getStartDateTime().toLocalDate().isBefore(localDate)).collect(Collectors.toList());
-			if (filteredEvents.isEmpty()) {
-			    System.out.println("No events after the selected date!");
-			} else {
-	            System.out.println("--- Events found: " + filteredEvents.size() + " ---");
-
-			    filteredEvents.forEach(e -> printEventDetails(e));
-			}
-
-		} catch (DataAccessException e) {
-			System.err.println("Database error: " + e.getMessage());
-		}
-	}
-    @Override
-	public void searchByDateRange() {
-	    LocalDate startDate = DateTimeUtil.getLocalDate("Enter start date (dd-mm-yyyy):");
-	    LocalDate endDate = DateTimeUtil.getLocalDate("Enter end date (dd-mm-yyyy):");
-
-	    if (startDate.isAfter(endDate)) {
-	        System.out.println("Error: Start date cannot be after end date.");
-	        return;
-	    }
-
-	    try {
-	        List<Event> allEvents = eventDao.listAvailableEvents();
-	        
-	        List<Event> filteredEvents = allEvents.stream()
-	            .filter(e -> {
-	                LocalDate eventDate = e.getStartDateTime().toLocalDate();
-	                return !eventDate.isBefore(startDate) && !eventDate.isAfter(endDate);
-	            })
-	            .collect(Collectors.toList());
-
-	        if (filteredEvents.isEmpty()) {
-	            System.out.println("No events found between " + startDate + " and " + endDate);
-	        } else {
-	            System.out.println("--- Events found: " + filteredEvents.size() + " ---");
-	            filteredEvents.forEach(e -> printEventDetails(e));
-	        }
-	    } catch (DataAccessException e) {
-	        System.err.println("Database error: " + e.getMessage());
-	    }
+		return cities;
 	}
 
-    @Override
-	public void searchBycategory() {
-		Map<Integer, String> categories = new HashMap<>();
-		try {
-			categories = categoryDao.getAllCategories();
-		} catch (DataAccessException e) {
-			System.out.println(e.getMessage());
-		}
-		if(!categories.isEmpty()) {
-			categories.forEach((key, value) -> System.out.println(key + ". " + value));
-		}else {
-			System.out.println("No cities found!");
-			return;
-		}
-		int categoryId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the category id:");
-		while(!categories.containsKey(categoryId)) {			
-			categoryId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the valid category id:");
-		}
-		final int selectedCategoryId = categoryId;
-		//java requires it to be final to ensure that the value the Lambda "sees" is the same value that actually exists in your code.
-		try {
-			List<Event> allEvents = eventDao.listAvailableEvents();
-			List<Event> filteredEvents = allEvents.stream().filter(e-> e.getCategoryId() == selectedCategoryId).collect(Collectors.toList());
-			if (filteredEvents.isEmpty()) {
-			    System.out.println("No events found for the selected category.");
-			} else {
-	            System.out.println("--- Events found: " + filteredEvents.size() + " ---");
-
-			    filteredEvents.forEach(e -> printEventDetails(e));
-			}
-
-		} catch (DataAccessException e) {
-			System.err.println("Database error: " + e.getMessage());
-		}
-		
-	}
-
-    @Override
-	//Registration function
-	public void registerForEvent(int userId) {
-	    try {
-	        List<Event> events = eventDao.listAvailableEvents();
-	        if (events == null || events.isEmpty()) {
-	            System.out.println("There are no available events!");
-	            return;
-	        }
-
-	        printEventSummaries(events);
-	        int choice = InputValidationUtil.readInt(ScannerUtil.getScanner(),"Select an event (1-" + events.size() + "): ");
-	        while (choice < 1 || choice > events.size()) {
-	        	choice = InputValidationUtil.readInt(
-	        			ScannerUtil.getScanner(),
-	        	        "Enter a valid choice: "
-	        	    );
-	        	}
-
-	       Event selectedEvent = events.get(choice - 1);
-	       int eventId = selectedEvent.getEventId();
-
-
-	        // Validate Event Selection
-	        List<Ticket> tickets = ticketDao.getTicketTypes(eventId);
-	        if (tickets.isEmpty()) {
-	            System.out.println("No ticket types available for this event.");
-	            return;
-	        }
-
-	        System.out.println("\nAvailable Ticket Types:");
-	        tickets.forEach(System.out::println);
-
-	        int ticketId = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the ticket id: ");
-	        
-	        // Find the selected ticket to get its price and availability
-	        Ticket selectedTicket = tickets.stream()
-	                .filter(t -> t.getTicketId() == ticketId)
-	                .findFirst()
-	                .orElseThrow(() -> new IllegalArgumentException("Invalid Ticket ID"));
-
-	        int quantity = InputValidationUtil.readInt(ScannerUtil.getScanner(), "How many tickets? ");
-
-	        // Call the service to handle the DB transactions
-	        boolean success = false;
-			try {
-				success = paymentService.processRegistration(
-				    userId, eventId, ticketId, quantity, selectedTicket.getPrice()
-				);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-	        if (success) {
-	            System.out.println("Registration successful! Enjoy your event.");
-	        } else {
-	            System.out.println("Registration failed. Please check ticket availability.");
-	        }
-
-	    } catch (Exception e) {
-	        System.out.println("Error during registration: " + e.getMessage());
-	    }
-	}
-    @Override
-	//Event history of specific user
-	public void viewUpcomingEvents(int userId) {
+	/*
+	 * Lists all currently available events.
+	 */
+	@Override
+	public List<Event> listAvailableEvents() {
 		List<Event> events = new ArrayList<>();
-		try {
-			events = eventDao.getUserEvents(userId);
-			List<Event> upcomingEvents = events.stream().filter(e -> e.getStartDateTime().isAfter(LocalDateTime.now())).toList();	
-			if(upcomingEvents.isEmpty()) {
-				System.out.println("No upcoming events!");
-				return;
-			
-			}
-			System.out.println("--- Events found: " + upcomingEvents.size() + " ---");
-			upcomingEvents.stream().forEach(e -> printEventSummaries(e));
-		} catch(DataAccessException e) {
-			System.out.println(e.getMessage());
-		}
-		
-	}
-    @Override
-	public void viewPastEvents(int userId) {
-		List<Event> events = new ArrayList<>();
-		try {
-			events = eventDao.getUserEvents(userId);
-			List<Event> pastEvents = events.stream().filter(e -> e.getStartDateTime().isBefore(LocalDateTime.now())).toList();	
-			if(pastEvents.isEmpty()) {
-				System.out.println("No past events!");
-				return;
-			}
-			System.out.println("--- Events found: " + pastEvents.size() + " ---");
-			pastEvents.stream().forEach(e -> printEventSummaries(e));
-			
-		} catch (DataAccessException e) {
-			System.out.println(e.getMessage());
-		}
-		
-	}
-    @Override
-	public void viewBookingDetails(int userId) {
-    	try {
-            List<BookingDetail> bookings = eventDao.viewBookingDetails(userId);
-
-            if (bookings.isEmpty()) {
-                System.out.println("No bookings found");
-                return;
-            }
-
-            for (BookingDetail b : bookings) {
-                System.out.println("------------------------------------------");
-                System.out.println("Event  : " + b.getEventName());
-                System.out.println("Venue : " + b.getVenueName() + " (" + b.getCity() + ")");
-                System.out.println("Tickets: " + b.getTicketType() + " x" + b.getQuantity());
-                System.out.println("Total : ₹" + b.getTotalCost());
-                System.out.println("------------------------------------------");
-            }
-
-        } catch (DataAccessException e) {
-            System.out.println(e.getMessage());
-        }
-		
-	}
-
-    
-    @Override
-	//Rating features
-	public void submitRating(int userId) {
-		List<Event> events = new ArrayList<>();
-		try {
-			events = eventDao.getUserEvents(userId);
-			if (events.isEmpty()) {
-				System.out.println("No events registered by the user!");
-				return;
-			}
-			List<Event> pastEvents = events.stream().filter(e -> e.getStartDateTime().isBefore(LocalDateTime.now())).toList();	
-			if(pastEvents.isEmpty()) {
-				System.out.println("No past events available to rate!");
-				return;
-			}
-			printEventSummaries(pastEvents);
-
-			int choice = InputValidationUtil.readInt(
-			    ScannerUtil.getScanner(),
-			    "Select an event (1-" + pastEvents.size() + "): "
-			);
-
-			while (choice < 1 || choice > pastEvents.size()) {
-			    choice = InputValidationUtil.readInt(
-			        ScannerUtil.getScanner(),
-			        "Enter a valid choice: "
-			    );
-			}
-
-			Event selectedEvent = pastEvents.get(choice - 1);
-			int eventId = selectedEvent.getEventId();
-
-			int rating = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the rating (1-5): ");
-			while(rating >5 || rating <1) {
-				rating = InputValidationUtil.readInt(ScannerUtil.getScanner(), "Enter the rating (1-5): ");
-			}
-			String comments = InputValidationUtil.readString(ScannerUtil.getScanner(), "Enter the feedback:\n(Optional, Press enter to skip)");
-			if(comments.trim().isBlank()) {
-				comments = null;
-			}
-			eventDao.submitRating(eventId,  userId, rating, comments);
-			return;
-		} catch (DataAccessException e) {
-			System.out.println(e.getMessage());
-		}
-		
-	}
-
-	
-	//Organizer functions
-    @Override
-	public void createTicket() {
-		// TODO Auto-generated method stub
-		
-	}
-    @Override
-	public void updateTicketPrice() {
-		// TODO Auto-generated method stub
-		
-	}
-    @Override
-	public void updateTicketQuantity() {
-		// TODO Auto-generated method stub
-		
-	}
-    @Override
-	public void viewTicketAvailability() {
-		// TODO Auto-generated method stub
-		
-	}
-    @Override
-	public void createEvent() {
-		// TODO Auto-generated method stub
-		
-	}
-    @Override
-	public void updateEventDetails() {
-		// TODO Auto-generated method stub
-		
-	}
-    @Override
-	public  void updateEventSchedule() {
-		// TODO Auto-generated method stub
-		
-	}
-    @Override
-	public void updateEventCapacity() {
-		// TODO Auto-generated method stub
-		
-	}
-    @Override
-	public void publishEvent() {
-		// TODO Auto-generated method stub
-		
-	}
-    @Override
-	public void cancelEvent() {
-		// TODO Auto-generated method stub
-		
-	}
-    @Override
-	//Admin functions
-	//note: this is a temporary function to make the events note as completed
-	public  void completeEvents() {
-		try {
-			eventDao.completeEvents();
-		} catch (DataAccessException e) {
-			System.out.println(e.getMessage());
-		}
-	}
-	
-	//Display functions:
-    @Override
-	public  void printAllAvailableEvents() {
-		List<Event> events = null;
 		try {
 			events = eventDao.listAvailableEvents();
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
-		if(events.isEmpty()) {
-			System.out.println("There are no available events!");
-			return;
-		}
-		printEventSummaries(events);
-		
+		return events;
 	}
-    @Override
-	public void printAllEvents() {
-		
-		List<Event> events = null;
+
+	/*
+	 * Retrieves all venues in the system.
+	 */
+	@Override
+	public List<Venue> getAllVenues() {
+		List<Venue> venues = new ArrayList<>();
 		try {
-			events = eventDao.listAllEvents();
+			venues = venueDao.getAllVenues();
 		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
-		if(events.isEmpty()) {
-			System.out.println("There are no events!");
-			return;
-		}
-		printEventDetails(events);
+		return venues;
 	}
 
-    @Override
-	public void printEventDetails(List<Event> events) {
-		events.stream().forEach(event -> {
-			try {
-				
-
-		        String category = categoryDao.getCategory(event.getCategoryId());
-		        String venueName = venueDao.getVenueName(event.getVenueId());
-		        String venueAddress = venueDao.getVenueAddress(event.getVenueId());
-		        int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
-		        List<Ticket> tickets = ticketDao.getTicketTypes(event.getEventId());
-			
-
-		        System.out.println("\n==============================================");
-		        System.out.println("Event ID        : " + event.getEventId());
-		        System.out.println("Title           : " + event.getTitle());
-	
-		        if (event.getDescription() != null) {
-		            System.out.println("Description     : " + event.getDescription());
-		        }
-	
-		        System.out.println("Category        : " + category);
-		        System.out.println("Duration        : "
-		                + DateTimeUtil.formatDateTime(event.getStartDateTime())
-		                + " to "
-		                + DateTimeUtil.formatDateTime(event.getEndDateTime()));
-	
-		        System.out.println("Total Tickets   : " + totalAvailable);
-	
-		        System.out.println("\nTicket Types");
-		        System.out.println("----------------------------------------------");
-	
-		        for (Ticket ticket : tickets) {
-		            System.out.println("• "
-		                    + ticket.getTicketType()
-		                    + " | Price: ₹"
-		                    + ticket.getPrice()
-		                    + " | Available: "
-		                    + ticket.getAvailableQuantity());
-		        }
-	
-		        System.out.println("\nVenue");
-		        System.out.println("----------------------------------------------");
-		        System.out.println("Name            : " + venueName);
-		        System.out.println("Address         : " + venueAddress);
-	
-		        System.out.println("==============================================");
-			}catch(DataAccessException e) {
-				System.out.println(e.getMessage());
-			}
-	    });
-		
-	}
-    @Override
-    public void printEventSummaries(List<Event> events) {
-        System.out.println("\nAvailable Events");
-        System.out.println("----------------------------------------------");
-        
-        int displayIndex = 1;
-        for (Event event : events) {
-            try {
-                String category = categoryDao.getCategory(event.getCategoryId());
-                int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
-
-                System.out.println(
-                    displayIndex + " | " +
-                    event.getTitle() + " | " +
-                    category + " | " +
-                    DateTimeUtil.formatDateTime(event.getStartDateTime()) +
-                    " | Tickets: " + totalAvailable
-                );
-
-                displayIndex++;
-            } catch (DataAccessException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-
-        System.out.println("----------------------------------------------");
-    }
-
-    private void printEventDetails(Event event) {
-    	try {
-			String category = categoryDao.getCategory(event.getCategoryId());
-	        String venueName = venueDao.getVenueName(event.getVenueId());
-	        String venueAddress = venueDao.getVenueAddress(event.getVenueId());
-	        int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
-	        List<Ticket> tickets = ticketDao.getTicketTypes(event.getEventId());
-	
-	        System.out.println("\n==============================================");
-	        System.out.println("Event ID        : " + event.getEventId());
-	        System.out.println("Title           : " + event.getTitle());
-	
-	        if (event.getDescription() != null) {
-	            System.out.println("Description     : " + event.getDescription());
-	        }
-	
-	        System.out.println("Category        : " + category);
-	        System.out.println("Duration        : "
-	                + DateTimeUtil.formatDateTime(event.getStartDateTime())
-	                + " to "
-	                + DateTimeUtil.formatDateTime(event.getEndDateTime()));
-	
-	        System.out.println("Total Tickets   : " + totalAvailable);
-	
-	        System.out.println("\nTicket Types");
-	        System.out.println("----------------------------------------------");
-	
-	        for (Ticket ticket : tickets) {
-	            System.out.println("• "
-	                    + ticket.getTicketType()
-	                    + " | Price: ₹"
-	                    + ticket.getPrice()
-	                    + " | Available: "
-	                    + ticket.getAvailableQuantity());
-	        }
-	
-	        System.out.println("\nVenue");
-	        System.out.println("----------------------------------------------");
-	        System.out.println("Name            : " + venueName);
-	        System.out.println("Address         : " + venueAddress);
-	
-	        System.out.println("==============================================");
-	    
-    	}catch(Exception e) {
-    		System.out.println(e.getMessage());
-    	}
-	}
-	
-    private void printEventSummaries(Event event) {
-    	try {
-    		
-    	
-			String category = categoryDao.getCategory(event.getCategoryId());
-	        int totalAvailable = ticketDao.getAvailableTickets(event.getEventId());
-	
-	        System.out.println(
-	            event.getEventId()
-	            + " | "
-	            + event.getTitle()
-	            + " | "
-	            + category
-	            + " | "
-	            + DateTimeUtil.formatDateTime(event.getStartDateTime())
-	            + " | Tickets: "
-	            + totalAvailable
-	        );
-	    
-	
-	        System.out.println("----------------------------------------------");
-		}catch(DataAccessException e) {
+	/*
+	 * Checks whether a venue is available for a given time range.
+	 */
+	@Override
+	public boolean isVenueAvailable(int venueId, LocalDateTime startTime, LocalDateTime endTime) {
+		try {
+			boolean isAvailable = venueDao.isVenueAvailable(venueId,
+					Timestamp.from(DateTimeUtil.convertLocalDefaultToUtc(startTime)),
+					Timestamp.from(DateTimeUtil.convertLocalDefaultToUtc(endTime)));
+			return isAvailable;
+		} catch (DataAccessException e) {
 			System.out.println(e.getMessage());
 		}
-    }
-	
+		return false;
+	}
+
+	/*
+	 * Retrieves venue details by identifier.
+	 */
+	@Override
+	public Venue getVenueById(int venueId) {
+		Venue venue = new Venue();
+		try {
+			venue = venueDao.getVenueById(venueId);
+			return venue;
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		return null;
+	}
+
+	/*
+	 * Lists events pending admin approval.
+	 */
+	@Override
+	public List<Event> listEventsYetToApprove() {
+		List<Event> events = new ArrayList<>();
+		try {
+			events = eventDao.listEventsYetToApprove();
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		if (events.isEmpty()) {
+			System.out.println("There are no events!");
+			return null;
+		}
+		return events;
+	}
+
+	/*
+	 * Lists events that are either available or in draft state.
+	 */
+	@Override
+	public List<Event> listAvailableAndDraftEvents() {
+		List<Event> events = null;
+		try {
+			events = eventDao.listAvailableAndDraftEvents();
+		} catch (DataAccessException e) {
+			System.out.println(e.getMessage());
+		}
+		if (events.isEmpty()) {
+			System.out.println("There are no events!");
+			return null;
+		}
+		return events;
+	}
+
 }

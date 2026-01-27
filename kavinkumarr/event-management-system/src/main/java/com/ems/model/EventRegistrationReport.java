@@ -2,12 +2,15 @@ package com.ems.model;
 
 import java.time.LocalDateTime;
 
+import com.ems.util.DateTimeUtil;
+
 public class EventRegistrationReport {
     private String eventTitle;
     private String userName;
     private String ticketType;
     private int quantity;
     private LocalDateTime registrationDate;
+    
 	public String getEventTitle() {
 		return eventTitle;
 	}
@@ -46,7 +49,7 @@ public class EventRegistrationReport {
 	        "Ticket Type  : " + ticketType + "\n" +
 	        "Quantity     : " + quantity + "\n" +
 	        "Registered On: " +
-	        com.ems.util.DateTimeUtil.formatDateTime(registrationDate) + "\n" +
+	        DateTimeUtil.formatDateTime(registrationDate) + "\n" +
 	        "------------------------------------------";
 	}
 

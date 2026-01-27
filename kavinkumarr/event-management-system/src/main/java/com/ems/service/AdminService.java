@@ -1,28 +1,56 @@
 package com.ems.service;
 
+import java.util.List;
+
+import com.ems.enums.NotificationType;
+import com.ems.enums.UserRole;
+import com.ems.model.Category;
+import com.ems.model.User;
+import com.ems.model.Venue;
+
 public interface AdminService {
 
-    void getUsersList(String userType);
-    
-    void getAllUsers();
+	// user management
+	List<User> getUsersList(String userType);
 
-    void changeStatus(String status);
+	List<User> getAllUsers();
 
-    void sendSystemWideNotification(String message, String notificationType);
+	boolean changeStatus(String status, int userId);
 
-    void approveEvents(int userId) throws Exception;
+	// notification management
+	void sendSystemWideNotification(String message, String notificationType);
 
-    void cancelEvents() throws Exception;
+	void sendNotificationByRole(String message, NotificationType selectedType, UserRole role);
 
-    void getEventWiseRegistrations();
+	void sendNotificationToUser(String message, NotificationType selectedType, int userId);
 
-    void getRevenueReport();
+	// event management
+	void approveEvents(int userId, int eventId);
 
-    void getOrganizerWisePerformance();
+	void cancelEvents(int eventId);
 
-    void markCompletedEvents();
+	void markCompletedEvents();
 
-	void sendNotificationByRole();
+	// reports & analytics 
+	void getEventWiseRegistrations(int eventId);
 
-	void sendNotificationToUser();
+	void getRevenueReport();
+
+	void getOrganizerWisePerformance();
+
+	// category management
+	List<Category> getAllCategories();
+
+	void addCategory(String name);
+
+	void updateCategory(int categoryId, String name);
+
+	void deleteCategory(int categoryId);
+
+	// Venue management
+	void addVenue(Venue venue);
+
+	void updateVenue(Venue selectedVenue);
+
+	void removeVenue(int venueId);
 }
