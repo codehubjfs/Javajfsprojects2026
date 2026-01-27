@@ -24,7 +24,7 @@ public class CustomerDAO {
 	public static ArrayList<Product> getActiveProducts() throws DBAccessException {
         ArrayList<Product> products = new ArrayList<>();
 
-        String sql = "SELECT * FROM product WHERE status = 'active'";
+        String sql = "select * from product where status = 'active'";
 
         try (Connection con = DBUtil.getConnection();
              Statement st = con.createStatement();
@@ -51,12 +51,12 @@ public class CustomerDAO {
 	
 	
 //cart for the customer
-	// cart for the customer
+
 	public static int getOrCreateCart(String email) throws DBAccessException {
 
 	    int userId = UserDAO.getUserIdByEmail(email);
 
-	    String checkSql = "SELECT cart_id FROM cart WHERE user_id=?";
+	    String checkSql = "select cart_id from cart where user_id=?";
 
 	    try (Connection con = DBUtil.getConnection();
 	         PreparedStatement ps = con.prepareStatement(checkSql)) {
@@ -68,7 +68,7 @@ public class CustomerDAO {
 	            return rs.getInt("cart_id");
 	        }
 
-	        String insertSql = "INSERT INTO cart(user_id,total_amount) VALUES(?,0)";
+	        String insertSql = "insert into cart(user_id,total_amount) values (?,0)";
 	        try (PreparedStatement insertPs =
 	                     con.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -95,7 +95,7 @@ public class CustomerDAO {
 	        throws DBAccessException {
 
 	    String checkSql =
-	            "SELECT quantity FROM cart_item WHERE cart_id=? AND product_id=?";
+	            "select quantity from cart_item where cart_id=? and product_id=?";
 
 	    try (Connection con = DBUtil.getConnection();
 	         PreparedStatement checkPs = con.prepareStatement(checkSql)) {
@@ -106,9 +106,7 @@ public class CustomerDAO {
 
 	        if (rs.next()) {
 	            String updateSql =
-	                "UPDATE cart_item SET quantity = quantity + ?, " +
-	                "item_total = item_total + (? * ?) " +
-	                "WHERE cart_id=? AND product_id=?";
+	                "update cart_items set quantity = quantity + ?,item_total = item_total + (? * ?) where cart_id=? and product_id=?";
 
 	            try (PreparedStatement ps = con.prepareStatement(updateSql)) {
 	                ps.setInt(1, quantity);
@@ -121,8 +119,7 @@ public class CustomerDAO {
 
 	        } else {
 	            String insertSql =
-	                "INSERT INTO cart_item(cart_id, product_id, quantity, price, item_total) " +
-	                "VALUES (?,?,?,?,?)";
+	                "insert into cart_item(cart_id, product_id, quantity, price, item_total) values (?,?,?,?,?)";
 
 	            try (PreparedStatement ps = con.prepareStatement(insertSql)) {
 	                ps.setInt(1, cartId);
@@ -141,10 +138,10 @@ public class CustomerDAO {
 
 	
 	
-	
+
 	public static Product getProductById(int productId) throws DBAccessException {
 
-	    String sql = "SELECT * FROM product WHERE product_id = ? AND status='active'";
+	    String sql = "select * from product where product_id = ? and status='active'";
 
 	    try (Connection con = DBUtil.getConnection();
 	         PreparedStatement ps = con.prepareStatement(sql)) {
@@ -174,10 +171,10 @@ public class CustomerDAO {
 
 	
 	
-	
+//to return stock
 	public static int getStock(int productId) throws DBAccessException {
 
-	    String sql = "SELECT stock_quantity FROM inventory WHERE product_id=?";
+	    String sql = "select stock_quantity from inventory where product_id=?";
 
 	    try (Connection con = DBUtil.getConnection();
 	         PreparedStatement ps = con.prepareStatement(sql)) {
@@ -198,12 +195,12 @@ public class CustomerDAO {
 
 	
 	
-	
+//to view the cart
 	public static ArrayList<CartItem> viewCart(int cartId) throws DBAccessException {
 
 	    ArrayList<CartItem> cartItems = new ArrayList<>();
 
-	    String sql = "SELECT p.*, ci.quantity, ci.price, ci.item_total FROM cart_item ci JOIN product p ON ci.product_id = p.product_id WHERE ci.cart_id = ?";
+	    String sql = "select p.*, ci.quantity, ci.price, ci.item_total from cart_item ci join product p on ci.product_id = p.product_id where ci.cart_id = ?";
 
 	    try (Connection con = DBUtil.getConnection();
 	         PreparedStatement ps = con.prepareStatement(sql)) {
@@ -241,76 +238,72 @@ public class CustomerDAO {
 
 
 	
-	
+//to create an order/checkout
 	public static void createOrder(String email,
             ArrayList<CartItem> items,
             double total)
-throws DBAccessException {
+            		throws DBAccessException {
 
-String orderSql =
-"INSERT INTO `order`(user_id, total_amount, status) VALUES (?, ?, 'placed')";
+		String orderSql =
+				"insert into `order`(user_id, total_amount, status) values (?, ?, 'placed')";
 
-String orderItemSql =
-"INSERT INTO order_item(order_id, product_id, quantity, price, item_total) " +
-"VALUES (?, ?, ?, ?, ?)";
+		String orderItemSql =
+				"insert into order_item(order_id, product_id, quantity, price, item_total) values (?, ?, ?, ?, ?)";
 
-String stockUpdateSql =
-"UPDATE inventory SET stock_quantity = stock_quantity - ? WHERE product_id = ?";
+		String stockUpdateSql =
+				"update inventory set stock_quantity = stock_quantity - ? where product_id = ?";
 
-String clearCartSql =
-"DELETE FROM cart_item WHERE cart_id = ?";
+		String clearCartSql =
+				"delete from cart_item where cart_id = ?";
 
-try (Connection con = DBUtil.getConnection()) {
+		try (Connection con = DBUtil.getConnection()) {
 
-con.setAutoCommit(false); // 🔥 TRANSACTION START
+			con.setAutoCommit(false);
 
-int userId = UserDAO.getUserIdByEmail(email);
-int cartId = CustomerDAO.getOrCreateCart(email);
+			int userId = UserDAO.getUserIdByEmail(email);
+			int cartId = CustomerDAO.getOrCreateCart(email);
+			
+			PreparedStatement orderPs =
+					con.prepareStatement(orderSql, Statement.RETURN_GENERATED_KEYS);
 
-// 1️⃣ Create Order
-PreparedStatement orderPs =
-con.prepareStatement(orderSql, Statement.RETURN_GENERATED_KEYS);
+			orderPs.setInt(1, userId);
+			orderPs.setDouble(2, total);
+			orderPs.executeUpdate();
 
-orderPs.setInt(1, userId);
-orderPs.setDouble(2, total);
-orderPs.executeUpdate();
+			ResultSet rs = orderPs.getGeneratedKeys();
+			rs.next();
+			int orderId = rs.getInt(1);
 
-ResultSet rs = orderPs.getGeneratedKeys();
-rs.next();
-int orderId = rs.getInt(1);
+			for (CartItem item : items) {
 
-// 2️⃣ Order Items + Inventory Update
-for (CartItem item : items) {
+				PreparedStatement itemPs = con.prepareStatement(orderItemSql);
+				itemPs.setInt(1, orderId);
+				itemPs.setInt(2, item.getProduct().getProductID());
+				itemPs.setInt(3, item.getQuantity());
+				itemPs.setDouble(4, item.getPrice());
+				itemPs.setDouble(5, item.getItemTotal());
+				itemPs.executeUpdate();
 
-PreparedStatement itemPs = con.prepareStatement(orderItemSql);
-itemPs.setInt(1, orderId);
-itemPs.setInt(2, item.getProduct().getProductID());
-itemPs.setInt(3, item.getQuantity());
-itemPs.setDouble(4, item.getPrice());
-itemPs.setDouble(5, item.getItemTotal());
-itemPs.executeUpdate();
+				PreparedStatement stockPs = con.prepareStatement(stockUpdateSql);
+				stockPs.setInt(1, item.getQuantity());
+				stockPs.setInt(2, item.getProduct().getProductID());
+				stockPs.executeUpdate();
+			}
 
-PreparedStatement stockPs = con.prepareStatement(stockUpdateSql);
-stockPs.setInt(1, item.getQuantity());
-stockPs.setInt(2, item.getProduct().getProductID());
-stockPs.executeUpdate();
-}
+			PreparedStatement clearPs = con.prepareStatement(clearCartSql);
+			clearPs.setInt(1, cartId);
+			clearPs.executeUpdate();
 
-// 3️⃣ Clear Cart
-PreparedStatement clearPs = con.prepareStatement(clearCartSql);
-clearPs.setInt(1, cartId);
-clearPs.executeUpdate();
+			con.commit(); 
 
-con.commit(); // ✅ TRANSACTION SUCCESS
-
-} catch (SQLException | IOException e) {
-throw new DBAccessException("Order placement failed.");
-}
-}
+		} catch (SQLException | IOException e) {
+			throw new DBAccessException("Order placement failed.");
+		}
+	}
 	
 	
 	
-	
+//to return list of orders
 	public static List<Order> getOrders(String email)
 	        throws DBAccessException, IOException {
 
@@ -319,14 +312,7 @@ throw new DBAccessException("Order placement failed.");
 	    int userId = UserDAO.getUserIdByEmail(email);
 
 	    String sql =
-	        "SELECT o.order_id, o.order_date, o.total_amount, " +
-	        "p.product_id, p.name, p.price, " +
-	        "oi.quantity " +
-	        "FROM `order` o " +
-	        "JOIN order_item oi ON o.order_id = oi.order_id " +
-	        "JOIN product p ON oi.product_id = p.product_id " +
-	        "WHERE o.user_id = ? " +
-	        "ORDER BY o.order_date DESC";
+	        "select o.order_id, o.order_date, o.total_amount,p.product_id, p.name, p.price,oi.quantity from `order` o join order_item oi on o.order_id = oi.order_id join product p on oi.product_id = p.product_id where o.user_id = ? order by o.order_date desc";
 
 	    try (Connection con = DBUtil.getConnection();
 	         PreparedStatement ps = con.prepareStatement(sql)) {
@@ -335,14 +321,14 @@ throw new DBAccessException("Order placement failed.");
 	        ResultSet rs = ps.executeQuery();
 
 	        Map<Integer, List<CartItem>> orderItemsMap = new HashMap<>();
-	        Map<Integer, OrderMeta> orderMetaMap = new HashMap<>();
+	        Map<Integer, OrderData> orderDataMap = new HashMap<>();
 
 	        while (rs.next()) {
 
 	            int orderId = rs.getInt("order_id");
 
-	            orderMetaMap.putIfAbsent(orderId,
-	                new OrderMeta(
+	            orderDataMap.putIfAbsent(orderId,
+	                new OrderData(
 	                    rs.getDouble("total_amount"),
 	                    rs.getTimestamp("order_date").toLocalDateTime().toLocalDate()
 	                )
@@ -375,17 +361,17 @@ throw new DBAccessException("Order placement failed.");
 	        }
 
 	        for (int orderId : orderItemsMap.keySet()) {
-	            OrderMeta meta = orderMetaMap.get(orderId);
+	            OrderData data = orderDataMap.get(orderId);
 	            orders.add(new Order(
 	                orderId,
 	                orderItemsMap.get(orderId),
-	                meta.totalAmount,
-	                meta.orderDate
+	                data.totalAmount,
+	                data.orderDate
 	            ));
 	        }
 
 	    } catch (SQLException e) {
-	        e.printStackTrace(); // keep this while debugging
+	        e.printStackTrace();
 	        throw new DBAccessException("Unable to fetch orders.");
 	    }
 
@@ -393,12 +379,11 @@ throw new DBAccessException("Order placement failed.");
 	}
 
 
-	/* Helper inner class */
-	static class OrderMeta {
+	static class OrderData {
 	    double totalAmount;
 	    LocalDate orderDate;
 
-	    OrderMeta(double totalAmount, LocalDate orderDate) {
+	    OrderData(double totalAmount, LocalDate orderDate) {
 	        this.totalAmount = totalAmount;
 	        this.orderDate = orderDate;
 	    }

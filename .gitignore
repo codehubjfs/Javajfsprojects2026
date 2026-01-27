@@ -35,3 +35,4 @@ pranavrmkumar/ecommerce/target/classes/Model/CartItem.class
 pranavrmkumar/ecommerce/target/classes/Model/Order.class
 pranavrmkumar/ecommerce/target/classes/ServiceLayer/CustomerServices.class
 pranavrmkumar/ecommerce/target/classes/UI/Customer.class
+pranavrmkumar/ecommerce/target/classes/DAO/CustomerDAO$OrderData.class

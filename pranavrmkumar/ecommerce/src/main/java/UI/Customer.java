@@ -15,6 +15,7 @@ public class Customer {
 		Scanner s = new Scanner(System.in);
 		int choice = -1;
 		System.out.println("Welcome "+customer.getName());
+		System.out.println();
 		do {
 			try {
 				System.out.println("1.View Products\n2.View Cart\n3.Checkout\n4.View Orders\n5.Logout");
@@ -36,6 +37,7 @@ public class Customer {
 	            	break;
 	            case 5:
 	            	System.out.println("Logged Out Successfully");
+	            	LoginUI.main(null);
 	            	break;
 	            }
 			}catch (EmptyInputException | InputMismatchException e) {

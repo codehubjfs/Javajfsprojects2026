@@ -31,7 +31,6 @@ public class CustomerServices {
 	        int choice;
 	        do {
 	            System.out.println("1. View all products\n2. Filter by name\n3. Filter by brand\n4. Filter by price range\n5. Sort by price\n6. Back");
-
 	            System.out.print("Enter choice: ");
 	            choice = InputValidate.ChoiceValidation(s, 1, 6);
 	            System.out.println();
@@ -61,8 +60,17 @@ public class CustomerServices {
 	                case 4:
 	                    double min = InputValidate.DoubleValidation(
 	                            s, "Enter min price:", 0, Double.MAX_VALUE);
-	                    double max = InputValidate.DoubleValidation(
-	                            s, "Enter max price:", min, Double.MAX_VALUE);
+	                    double max ;
+	                    while(true) {
+	                    	max = InputValidate.DoubleValidation(s, "Enter max price: ", 0, Double.MAX_VALUE);
+	                    	
+	                    	if(max < min) {
+	                    		throw new InputMismatchException("Max value cannot be lesser than min value.");
+	                    	}
+	                    	else {
+	                    		break;
+	                    	}
+	                    }
 	                    shownProducts = products.stream()
 	                            .filter(p -> p.getPrice() >= min && p.getPrice() <= max)
 	                            .collect(Collectors.toList());
@@ -82,10 +90,8 @@ public class CustomerServices {
 	                    return;
 	            }
 
-	            // 🔥 DISPLAY PRODUCTS
 	            display(shownProducts);
 
-	            // 🔥 ADD TO CART
 	            if (!shownProducts.isEmpty()) {
 	                System.out.print("Add a product to cart? (y/n): ");
 	                String input = s.nextLine();
@@ -98,7 +104,7 @@ public class CustomerServices {
 
 
 	                    addToCart(customer, productId, qty);
-	                    System.out.println("✅ Product added to cart.\n");
+	                    System.out.println("Product added to cart.\n");
 	                }
 	            }
 
@@ -206,7 +212,7 @@ public class CustomerServices {
 
 	    if (input.equalsIgnoreCase("y")) {
 	        placeOrder(customer, items, total);
-	        System.out.println("✅ Order placed successfully!");
+	        System.out.println("Order placed successfully!");
 	    } else {
 	        System.out.println("Checkout cancelled.");
 	    }
@@ -218,10 +224,10 @@ public class CustomerServices {
 	public static void placeOrder(Customer customer,
             ArrayList<CartItem> items,
             double total)
-throws DBAccessException {
+            		throws DBAccessException {
 
-CustomerDAO.createOrder(customer.getEmail(), items, total);
-}
+		CustomerDAO.createOrder(customer.getEmail(), items, total);
+	}
 	
 	
 	

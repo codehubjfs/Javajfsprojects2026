@@ -12,7 +12,7 @@ import util.DBUtil;
 public class UserDAO {
 	public static int getUserIdByEmail(String email) throws DBAccessException {
 
-	    String sql = "SELECT user_id FROM user WHERE email=? AND status='active'";
+	    String sql = "select user_id from user where email=? and status='active'";
 
 	    try (Connection con = DBUtil.getConnection();
 	         PreparedStatement ps = con.prepareStatement(sql)) {

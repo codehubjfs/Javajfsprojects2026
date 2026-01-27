@@ -23,6 +23,11 @@ public class InputValidate {
 			
 			int choice = Integer.parseInt(input);
 			
+			//negative check
+			if(choice < 0) {
+				throw new InputMismatchException("Choice cannot be negative.");
+			}
+			
 			//range check
 			if(choice < min || choice > max) {
 				throw new InputMismatchException("Please enter a valid Option.");
@@ -84,6 +89,9 @@ public class InputValidate {
 	
 	//Method to validate Double Input
 	public static double DoubleValidation(Scanner s,String prompt,double min,double max) throws EmptyInputException, InputMismatchException {
+		if(max <= min) {
+			throw new InputMismatchException("Max value cannot be lesser than min value.");
+		}
 		while(true) {
 			System.out.println(prompt);
 			String input = s.nextLine().trim();
@@ -99,9 +107,18 @@ public class InputValidate {
 			
 			double value = Double.parseDouble(input);
 			
+			//negative check
+			if(value < 0) {
+				throw new InputMismatchException("Value cannot be negative.");
+			}
+			
+			
+			
 			if(value < min || value > max) {
 				throw new InputMismatchException("Value must be in range between "+min+" - "+max);
 			}
+			
+			
 			return value;
 		}
 		
@@ -146,7 +163,10 @@ public class InputValidate {
 				throw new InputMismatchException("Invalid Characters Detected.Try Again.");
 			}
 			
-			
+			//not only numbers
+			if (input.matches("[0-9]+")) {
+	            throw new InputMismatchException("Input cannot contain only numbers.");
+	        }
 			return input;
 		}
 	}
@@ -154,6 +174,7 @@ public class InputValidate {
 	
 	//method to validate for email address
 	public static String EmailValidation(Scanner s,String prompt) throws EmptyInputException,InputMismatchException {
+		while(true) {
 		System.out.println(prompt);
 		String input = s.nextLine().trim();
 		
@@ -167,11 +188,13 @@ public class InputValidate {
 		}
 		
 		return input;
+		}
 	}
 	
 	
 	//method to validate for password
 	public static String PasswordValidation(Scanner s,String prompt) throws EmptyInputException{
+		while(true) {
 		System.out.println(prompt);
 		String input = s.nextLine().trim();
 		
@@ -180,5 +203,6 @@ public class InputValidate {
 		}
 		
 		return input;
+		}
 	}
 }

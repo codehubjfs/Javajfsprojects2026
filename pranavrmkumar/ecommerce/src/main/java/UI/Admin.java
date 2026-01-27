@@ -47,6 +47,7 @@ public class Admin {
 				break;
 			case 7:
 				System.out.println("Thank You Admin!");
+				LoginUI.main(null);
 				break;
 			default:
 				System.out.println("Please choose a valid option.");

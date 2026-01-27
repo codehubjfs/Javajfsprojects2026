@@ -56,6 +56,8 @@ public class LoginUI {
 				}
 				System.out.println("More than 3 failed attempts.Exiting");
 				return;
+				
+				
 				case 2:
 					int adminAttempts = 0;
 					while(adminAttempts < 3) {

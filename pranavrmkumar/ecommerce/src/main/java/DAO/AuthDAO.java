@@ -16,7 +16,7 @@ public class AuthDAO {
 	
 	//admin login
 	public static Admin adminLogin(String email,String password) throws DBAccessException{
-		String sql = "select user_id,name,email,role from user where email = ? and password = ? and role = 'admin'";
+		String sql = "select name,email,role from user where email = ? and password = ? and role = 'admin'";
 		try(Connection con = DBUtil.getConnection();
 				PreparedStatement ps = con.prepareStatement(sql)){
 			ps.setString(1, email);
@@ -46,7 +46,7 @@ public class AuthDAO {
             if (!rs.next()) {
                 throw new InvalidCredentialsException("Invalid email or password.");
             }
-            if ("blocked".equalsIgnoreCase(rs.getString("status"))) {
+            if ("inactive".equalsIgnoreCase(rs.getString("status"))) {
                 throw new InvalidCredentialsException("Account is blocked. Contact support.");
             }
             return new Customer(
