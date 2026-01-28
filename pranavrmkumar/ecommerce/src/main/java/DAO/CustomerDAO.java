@@ -355,6 +355,7 @@ public class CustomerDAO {
 	                price * quantity
 	            );
 
+	            
 	            orderItemsMap
 	                .computeIfAbsent(orderId, k -> new ArrayList<>())
 	                .add(item);

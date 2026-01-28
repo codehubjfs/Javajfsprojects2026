@@ -184,7 +184,7 @@ public class InputValidate {
 		}
 		
 		if(!input.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
-			throw new InputMismatchException("Invalid email format.");
+			throw new InputMismatchException("Invalid email format (Email format: abc@example.com).");
 		}
 		
 		return input;
@@ -205,4 +205,77 @@ public class InputValidate {
 		return input;
 		}
 	}
+	
+	
+	
+	
+	public static String NameValidation(Scanner s, String prompt)
+	        throws EmptyInputException, InputMismatchException {
+
+	    while (true) {
+	        System.out.println(prompt);
+	        String input = s.nextLine().trim();
+
+	        if (input.isEmpty()) {
+	            throw new EmptyInputException("Name cannot be empty.");
+	        }
+
+	        // Only letters and spaces
+	        if (!input.matches("[A-Za-z ]+")) {
+	            throw new InputMismatchException("Name can contain only letters and spaces.");
+	        }
+
+	        return input;
+	    }
+	}
+
+	
+	
+	public static String AddressValidation(Scanner s, String prompt)
+	        throws EmptyInputException, InputMismatchException {
+
+	    while (true) {
+	        System.out.println(prompt);
+	        String input = s.nextLine().trim();
+
+	        if (input.isEmpty()) {
+	            throw new EmptyInputException("Address field cannot be empty.");
+	        }
+
+	        // Valid address characters
+	        if (!input.matches("[A-Za-z0-9 ,./-]+")) {
+	            throw new InputMismatchException("Invalid characters in address.");
+	        }
+
+	        // Prevent only numbers
+	        if (input.matches("\\d+")) {
+	            throw new InputMismatchException("Address cannot contain only numbers.");
+	        }
+
+	        return input;
+	    }
+	}
+
+	
+	
+	public static String PincodeValidation(Scanner s, String prompt)
+	        throws EmptyInputException, InputMismatchException {
+
+	    while (true) {
+	        System.out.println(prompt);
+	        String input = s.nextLine().trim();
+
+	        if (input.isEmpty()) {
+	            throw new EmptyInputException("Pincode cannot be empty.");
+	        }
+
+	        // Exactly 6 digits
+	        if (!input.matches("\\d{6}")) {
+	            throw new InputMismatchException("Pincode must be exactly 6 digits.");
+	        }
+
+	        return input;
+	    }
+	}
+
 }

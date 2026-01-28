@@ -84,7 +84,7 @@ public class AdminDAO {
 	        }
 		}
 		catch(SQLException | IOException e) {
-			throw new DBAccessException("Unable to fetch Categories.");
+			throw new DBAccessException("Unable to add a new Category.");
 		}
 	}
 	
@@ -100,7 +100,7 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DBAccessException("Unable to fetch Categories.");
+			throw new DBAccessException("Unable to delete the Category.");
 		}
 	}
 	
@@ -117,7 +117,7 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DBAccessException("Unable to fetch Categories.");
+			throw new DBAccessException("Unable to modify Category.");
 		}
 	}
 	
@@ -134,7 +134,7 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DBAccessException("Unable to fetch Categories.");
+			throw new DBAccessException("Unable to modify Category.");
 		}
 	}
 		
@@ -151,7 +151,7 @@ public class AdminDAO {
 				}
 			}
 			catch(SQLException | IOException e) {
-				throw new DBAccessException("Unable to fetch Categories.");
+				throw new DBAccessException("Unable to modify Category.");
 			}
 		}
 	
@@ -197,7 +197,7 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DBAccessException("Unable to fetch Products.");
+			throw new DBAccessException("Unable to delete Product.");
 		}
 	}
 	
@@ -216,7 +216,7 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DBAccessException("Unable to fetch Products.");
+			throw new DBAccessException("Unable to modify Product.");
 		}
 	}
 	
@@ -272,7 +272,7 @@ public class AdminDAO {
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DBAccessException("Unable to fetch Inventory.");
+			throw new DBAccessException("Unable to update Inventory.");
 		}
 	}
 	
@@ -328,7 +328,7 @@ public class AdminDAO {
 	        }
 		}
 		catch(SQLException | IOException e) {
-			throw new DBAccessException("Unable to fetch Discounts.");
+			throw new DBAccessException("Unable to create Discount.");
 		}
 	}
 	
@@ -341,11 +341,11 @@ public class AdminDAO {
 	        ps.setInt(1, did);
 	        int rows = ps.executeUpdate();
 	        if(rows == 0) {
-				throw new EntityNotFoundException("Dsicount not found");
+				throw new EntityNotFoundException("Discount not found");
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DBAccessException("Unable to fetch Discounts.");
+			throw new DBAccessException("Unable to delete Discount.");
 	    }
 	}
 	
@@ -398,11 +398,11 @@ public class AdminDAO {
 			ps.setInt(2, ticket_id);
 			int rows = ps.executeUpdate();
 			if(rows == 0) {
-				throw new EntityNotFoundException("Discount not found");
+				throw new EntityNotFoundException("Ticket not found");
 			}
 		}
 		catch(SQLException | IOException e) {
-			throw new DBAccessException("Unable to fetch Discounts.");
+			throw new DBAccessException("Unable to update Ticket.");
 		}
 	}
 }

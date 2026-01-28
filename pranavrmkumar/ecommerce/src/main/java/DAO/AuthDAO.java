@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import Exceptions.DBAccessException;
 import Exceptions.InvalidCredentialsException;
@@ -59,4 +60,78 @@ public class AuthDAO {
             throw new DBAccessException("Unable to login. Please try again later.");
         }
 	}
+	
+	
+	//new customer registration
+	public static boolean emailExists(String email) throws DBAccessException {
+	    String sql = "select user_id from user where email = ?";
+	    try (Connection con = DBUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+
+	        ps.setString(1, email);
+	        ResultSet rs = ps.executeQuery();
+	        return rs.next();
+
+	    } catch (SQLException | IOException e) {
+	        throw new DBAccessException("Unable to check email availability");
+	    }
+	}
+
+
+	public static boolean registerCustomerWithAddress(
+	        String name, String email, String password,
+	        String street, String city, String state, String pincode
+	) throws DBAccessException {
+
+	    String userSql =
+	            "insert into user (name, email, password, role, status) values (?, ?, ?, 'customer', 'active')";
+
+	    String addressSql =
+	            "insert into address (user_id, street, city, state, zipcode, address_type) values (?, ?, ?, ?, ?, 'home')";
+
+	    try (Connection con = DBUtil.getConnection()) {
+
+	        con.setAutoCommit(false);
+
+	        // 1️⃣ Insert into user table
+	        try (PreparedStatement psUser =
+	                     con.prepareStatement(userSql, Statement.RETURN_GENERATED_KEYS)) {
+
+	            psUser.setString(1, name);
+	            psUser.setString(2, email);
+	            psUser.setString(3, password);
+	            psUser.executeUpdate();
+
+	            ResultSet rs = psUser.getGeneratedKeys();
+	            if (!rs.next()) {
+	                con.rollback();
+	                throw new DBAccessException("User registration failed.");
+	            }
+
+	            int userId = rs.getInt(1);
+
+	            // 2️⃣ Insert address
+	            try (PreparedStatement psAddress =
+	                         con.prepareStatement(addressSql)) {
+
+	                psAddress.setInt(1, userId);
+	                psAddress.setString(2, street);
+	                psAddress.setString(3, city);
+	                psAddress.setString(4, state);
+	                psAddress.setString(5, pincode);
+	                psAddress.executeUpdate();
+	            }
+	        }
+
+	        con.commit();
+	        return true;
+
+	    } catch (SQLException | IOException e) {
+	        throw new DBAccessException("Registration failed. Please try again.");
+	    }
+	}
+
+
+
+
 }

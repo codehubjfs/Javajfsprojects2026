@@ -19,10 +19,11 @@ public class LoginUI {
 			try {
 				System.out.println("1.Login as Customer");
 				System.out.println("2.Login as Admin");
-				System.out.println("3.Exit");
+				System.out.println("3.Register as a new Customer");
+				System.out.println("4.Exit");
 				System.out.print("Please enter your choice: ");
 				
-				choice = InputValidate.ChoiceValidation(s, 1, 3);
+				choice = InputValidate.ChoiceValidation(s, 1, 4);
 				System.out.println();
 				
 				switch(choice) {
@@ -90,7 +91,41 @@ public class LoginUI {
 					}
 					System.out.println("More than 3 failed attempts.Exiting");
 					return;
+					
 				case 3:
+				    try {
+				        System.out.println("------ Customer Registration ------");
+
+				        String name = InputValidate.NameValidation(s, "Enter name: ");
+				        String email = InputValidate.EmailValidation(s, "Enter email: ");
+				        String password = InputValidate.PasswordValidation(s, "Enter password: ");
+
+				        // Address inputs
+				        String street = InputValidate.AddressValidation(s, "Enter street: ");
+				        String city = InputValidate.AddressValidation(s, "Enter city: ");
+				        String state = InputValidate.AddressValidation(s, "Enter state: ");
+				        String pincode = InputValidate.PincodeValidation(s, "Enter pincode: ");
+
+				        boolean success = AuthService.registerCustomer(
+				                name, email, password,
+				                street, city, state, pincode
+				        );
+
+				        if (success) {
+				            System.out.println("\nRegistration successful. Please login.");
+				        }
+
+				    } catch (EmptyInputException | InputMismatchException e) {
+				        System.out.println(e.getMessage());
+				    } catch (DBAccessException e) {
+				        System.out.println("Error: " + e.getMessage());
+				        return;
+				    }
+				    break;
+
+					
+					
+				case 4:
 					System.out.println("Thank You!");
 					break;
 				}
@@ -98,7 +133,7 @@ public class LoginUI {
 					System.out.println(e.getMessage());
 					System.out.println();
 				}
-			}while(choice != 3);
+			}while(choice != 4);
 		s.close();
 		}
 }

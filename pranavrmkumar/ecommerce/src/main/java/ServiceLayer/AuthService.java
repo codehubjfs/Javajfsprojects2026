@@ -25,4 +25,23 @@ public class AuthService {
 
         return AuthDAO.customerLogin(email, password);
     }
+	
+	
+	
+	public static boolean registerCustomer(
+	        String name, String email, String password,
+	        String street, String city, String state, String pincode
+	) throws DBAccessException {
+
+	    // email already exists check
+	    if (AuthDAO.emailExists(email)) {
+	        throw new DBAccessException("Email already registered.");
+	    }
+
+	    return AuthDAO.registerCustomerWithAddress(
+	            name, email, password,
+	            street, city, state, pincode
+	    );
+	}
+
 }
