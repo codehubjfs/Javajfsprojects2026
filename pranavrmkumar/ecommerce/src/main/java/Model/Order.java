@@ -6,9 +6,13 @@ import java.util.List;
 public class Order {
 
     private int orderId;
+    private int userId;
     private List<CartItem> items;
     private double totalAmount;
+    private String userName;
     private LocalDate orderDate;
+    private String status;
+    private int address_id;
 
     // Constructor for DB fetch
     public Order(int orderId, List<CartItem> items,
@@ -17,6 +21,17 @@ public class Order {
         this.items = items;
         this.totalAmount = totalAmount;
         this.orderDate = orderDate;
+    }
+    
+    
+    public Order(int orderId,int userId,String userName,double totalAmount,LocalDate orderDate,String status,int address_id) {
+    	this.orderId = orderId;
+    	this.userId = userId;
+    	this.userName = userName;
+    	this.totalAmount = totalAmount;
+    	this.orderDate = orderDate;
+    	this.status = status;
+    	this.address_id = address_id;
     }
 
     public int getOrderId() {
@@ -51,4 +66,31 @@ public class Order {
         System.out.println("Total Amount: ₹" + totalAmount);
         System.out.println("==========================");
     }
+
+    public void displayAdminOrder() {
+    	System.out.println("Order ID: " + orderId + 
+                " | User ID: " + userId +
+                " | Customer: " + userName +
+                " | Date: " + orderDate +
+                " | Status: " + status +
+                " | Total: ₹" + totalAmount);
+    }
+    
+    
+	public int getUserId() {
+		return userId;
+	}
+
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public int returnAddressId() {
+		return address_id;
+	}
 }

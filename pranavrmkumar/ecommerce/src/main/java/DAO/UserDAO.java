@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 import Exceptions.DBAccessException;
 import util.DBUtil;
 
@@ -30,5 +29,58 @@ public class UserDAO {
 	        throw new DBAccessException("Unable to fetch user.");
 	    }
 	}
+	
+	
+	
+	public static String getAddressByEmail(String email) throws DBAccessException {
+
+        String sql =
+            "SELECT a.street, a.city, a.state, a.zipcode " +
+            "FROM address a " +
+            "JOIN user u ON a.user_id = u.user_id " +
+            "WHERE u.email = ?";
+
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("street") + ", " +
+                       rs.getString("city") + ", " +
+                       rs.getString("state") + " - " +
+                       rs.getString("zipcode");
+            } else {
+                return "Address not found";
+            }
+
+        } catch (SQLException | IOException e) {
+            throw new DBAccessException("Unable to fetch delivery address.");
+        }
+    }
+	
+	
+	
+	public static int getAddressIDByEmail(String email) throws DBAccessException {
+
+        String sql = "select a.address_id from address a join user u on a.user_id = u.user_id where u.email = ?";
+
+        try (Connection con = DBUtil.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("address_id");
+            } else {
+                return 0;
+            }
+
+        } catch (SQLException | IOException e) {
+            throw new DBAccessException("Unable to fetch delivery address.");
+        }
+    }
 
 }

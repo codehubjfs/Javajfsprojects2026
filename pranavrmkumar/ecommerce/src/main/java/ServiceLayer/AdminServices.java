@@ -1,4 +1,6 @@
 package ServiceLayer;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import DAO.AdminDAO;
@@ -6,12 +8,13 @@ import Exceptions.DBAccessException;
 import Exceptions.EmptyInputException;
 import Exceptions.EntityNotFoundException;
 import Exceptions.InputMismatchException;
+import Model.CartItem;
+import Model.Order;
 import util.InputValidate;
 
 public class AdminServices {
-	private static final Scanner s = new Scanner(System.in);
 	
-	public static void manageCustomers() {
+	public static void manageCustomers(Scanner s) {
 		int choice = -1;
 		do {
 			try {
@@ -48,7 +51,7 @@ public class AdminServices {
 	}
 	
 	
-	public static void manageCategory() throws Exception{
+	public static void manageCategory(Scanner s) throws Exception{
 		int choice = -1;
 		do {
 			try {
@@ -69,7 +72,7 @@ public class AdminServices {
 				String category_name = InputValidate.StringValidation(s, "Please enter the new Category name: ");
 				String desc = InputValidate.DescURLValidation(s, "Please enter the Category Description: ");
 				AdminDAO.addCategory(category_name, desc);
-				System.out.println("Category added Successfully");
+				System.out.println("New Category created Successfully");
 				System.out.println();
 				break;
 				
@@ -95,12 +98,14 @@ public class AdminServices {
 						cat_id = InputValidate.IntValidation(s, "Please enter Category_id to modify: ");
 						String cat_name = InputValidate.StringValidation(s, "Please enter new Category name: ");
 						AdminDAO.modifyCategoryName(cat_name, cat_id);
+						System.out.println("Category name is modified successfully");
 						break;
 						
 					case 2:
 						cat_id = InputValidate.IntValidation(s, "Please enter Category_id to modify: ");
 						String cat_desc = InputValidate.DescURLValidation(s, "Please enter new Category Description: ");
 						AdminDAO.modifyCategoryDesc(cat_desc, cat_id);
+						System.out.println("Category Description is modified successfully");
 						break;
 						
 					case 3:
@@ -112,6 +117,7 @@ public class AdminServices {
 							    cat_status = InputValidate.StringValidation(s, "Please enter new Category Status: ");
 							}
 						AdminDAO.modifyCategoryStatus(cat_status, cat_id);
+						System.out.println("Category status is modified successfully");
 						break;
 					case 4:
 						break;
@@ -137,7 +143,7 @@ public class AdminServices {
 	
 	
 	
-	public static void manageProducts() throws Exception{
+	public static void manageProducts(Scanner s) throws Exception{
 		int choice = -1;
 		int pid;
 		do {
@@ -156,6 +162,7 @@ public class AdminServices {
 				double price = InputValidate.DoubleValidation(s, "Please enter the Product Price: ", 1.0, 100000);
 				String url = InputValidate.DescURLValidation(s, "Please enter the Product Image URL: ");
 				AdminDAO.addProduct(cat_id, name, brand, desc, price, url);
+				System.out.println("New Product added");
 				System.out.println();
 				break;
 				
@@ -192,7 +199,7 @@ public class AdminServices {
 	
 	
 	
-	public static void manageInventory() throws Exception{
+	public static void manageInventory(Scanner s) throws Exception{
 		int choice = -1;
 		do {
 			try {
@@ -234,7 +241,7 @@ public class AdminServices {
 
 
 
-	public static void manageDiscounts() throws Exception{
+	public static void manageDiscounts(Scanner s) throws Exception{
 		// TODO Auto-generated method stub
 		int choice = -1;
 		do {
@@ -250,8 +257,15 @@ public class AdminServices {
 			double percent = InputValidate.DoubleValidation(s, "Enter discount percentage: ", 0.0, 100.0);
 
 			String expiry_date = InputValidate.DateValidation(s, "Enter expiry date (yyyy-mm-dd): ");
+			LocalDate expiry = LocalDate.parse(expiry_date);
+			LocalDate today = LocalDate.now();
+
+			if (expiry.isBefore(today)) {
+			    throw new DBAccessException("Expiry date cannot be before today.");
+			}
+
 			AdminDAO.createDiscount(code,percent,expiry_date);
-			System.out.println("Discount Added");
+			System.out.println("New Discount Added");
 			break;
 			
 		case 2:
@@ -278,7 +292,7 @@ public class AdminServices {
 		}while(choice != 4);
 	}
 	
-	public static void manageTickets() throws Exception {
+	public static void manageTickets(Scanner s) throws Exception {
 		int choice = -1;
 	    do {
 	    	try {
@@ -299,7 +313,7 @@ public class AdminServices {
 
 	            case 2:
 	                int tid = InputValidate.IntValidation(s, "Enter Ticket id to Update: ");
-	                String status = InputValidate.StringValidation(s, "Enter status (open/closed): ");
+	                String status = InputValidate.StringValidation(s, "Enter status (open/closed): ").toLowerCase();
 	                while (!status.matches("open|in_progress|resolved|closed")) {
 	                    System.out.println("Invalid status. Choose: open/in_progress/resolved/closed");
 	                }
@@ -317,5 +331,74 @@ public class AdminServices {
 			}
 	    } while (choice != 3);
 	}
+	
+	
+	public static void manageOrders(Scanner s) throws Exception{
+
+	    int choice = -1;
+
+	    do {
+	        try {
+	            System.out.println("1.View all Orders\n2.View Order Details\n3.Go back to previous page.");
+	            System.out.print("Please enter your choice: ");
+
+	            choice = InputValidate.ChoiceValidation(s, 1, 3);
+	            System.out.println();
+
+	            switch (choice) {
+
+	                case 1:
+	                    ArrayList<Order> orders = AdminDAO.viewOrders();
+	                    if (orders.isEmpty()) {
+	                        System.out.println("No orders found.");
+	                    } else {
+	                        for (Order order : orders) {
+	                            order.displayAdminOrder();
+	                        }
+	                    }
+	                    System.out.println();
+	                    break;
+
+	                case 2:
+	                    int orderId = InputValidate.IntValidation(s, "Enter order ID to view details: ");
+	                    ArrayList<CartItem> items = AdminDAO.viewOrderDetails(orderId);
+
+	                    if (items.isEmpty()) {
+	                        System.out.println("No items found for this order.");
+	                    } else {
+	                        System.out.println("----------- Order " + orderId + " Details -----------");
+	                        double total = 0;
+
+	                        for (CartItem item : items) {
+	                            System.out.println(
+	                                "Product: " + item.getProduct().getName() +
+	                                " | Brand: " + item.getProduct().getBrand() +
+	                                " | Qty: " + item.getQuantity() +
+	                                " | Price: ₹" + item.getPrice() +
+	                                " | Total: ₹" + item.getItemTotal()
+	                            );
+	                            total += item.getItemTotal();
+	                        }
+
+	                        System.out.println("Order Total: ₹" + total);
+	                        System.out.println("================================");
+	                    }
+
+	                    System.out.println();
+	                    break;
+
+	                case 3:
+	                    return;
+	            }
+
+	        } catch (EmptyInputException | InputMismatchException | DBAccessException e) {
+	            System.out.println(e.getMessage());
+	            System.out.println();
+	            choice = -1;
+	        }
+
+	    } while (choice != 3);
+	}
+
 
 }

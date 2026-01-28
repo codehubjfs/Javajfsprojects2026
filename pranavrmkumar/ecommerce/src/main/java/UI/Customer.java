@@ -10,9 +10,8 @@ import util.InputValidate;
 
 public class Customer {
 
-	public static void customerMenu(Model.Customer customer) {
+	public static void customerMenu(Scanner s,Model.Customer customer) {
 		// TODO Auto-generated method stub
-		Scanner s = new Scanner(System.in);
 		int choice = -1;
 		System.out.println("Welcome "+customer.getName());
 		System.out.println();
@@ -37,14 +36,15 @@ public class Customer {
 	            	break;
 	            case 5:
 	            	System.out.println("Logged Out Successfully");
-	            	LoginUI.main(null);
-	            	break;
+	            	System.out.println();
+	            	return;
 	            }
 			}catch (EmptyInputException | InputMismatchException e) {
                 System.out.println(e.getMessage());
             } catch (DBAccessException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println(e.getMessage());
+				System.out.println();
 			}
 		}while(choice != 5);
 	}

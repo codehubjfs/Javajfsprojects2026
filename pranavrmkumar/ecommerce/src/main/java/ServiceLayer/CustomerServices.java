@@ -8,6 +8,7 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import DAO.CustomerDAO;
+import DAO.UserDAO;
 import Exceptions.DBAccessException;
 import Exceptions.EmptyInputException;
 import Exceptions.InputMismatchException;
@@ -94,11 +95,11 @@ public class CustomerServices {
 
 	            if (!shownProducts.isEmpty()) {
 	                System.out.print("Add a product to cart? (y/n): ");
-	                String input = s.nextLine();
+	                String input = s.nextLine().trim();
 	                char ch = input.charAt(0);
 
 
-	                if (ch == 'y' || ch == 'Y') {
+	                if (ch == 'y' || ch == 'Y' || input.equalsIgnoreCase("yes")) {
 	                	int productId = InputValidate.IntValidation(s, "Enter Product ID:");
 	                	int qty = InputValidate.IntValidation(s, "Enter Quantity:");
 
@@ -123,10 +124,12 @@ public class CustomerServices {
         }
 
         products.forEach(p -> System.out.println(
-                p.getProductID() + " | " +
-                p.getName() + " | " +
-                p.getBrand() + " | ₹" +
-                p.getPrice()
+                "Product ID: " + p.getProductID() + " | " +
+                "Name: " + p.getName() + " | " +
+                "Brand: " + p.getBrand() + " | " +
+                "Description: " + p.getDescription() + " | " +
+                "Image: " + p.getURL() + " | " +
+                "Price: " + " ₹ " +p.getPrice()
         ));
         System.out.println();
     }
@@ -180,6 +183,7 @@ public class CustomerServices {
 	    }
 
 	    System.out.println("Total Amount: ₹" + total);
+	    System.out.println();
 	}
 
 
@@ -204,17 +208,24 @@ public class CustomerServices {
 	        );
 	        total += item.getItemTotal();
 	    }
-
+	    
+	    String address = UserDAO.getAddressByEmail(customer.getEmail());
+	    
 	    System.out.println("Total Amount: ₹" + total);
+	    System.out.println("Order will be delivered to: ");
+	    System.out.println(address);
+	    System.out.println();
 	    System.out.print("Confirm checkout? (y/n): ");
 
 	    String input = s.nextLine().trim();
 
-	    if (input.equalsIgnoreCase("y")) {
+	    if (input.equalsIgnoreCase("y") || input.equalsIgnoreCase("yes")) {
 	        placeOrder(customer, items, total);
 	        System.out.println("Order placed successfully!");
+	        System.out.println();
 	    } else {
 	        System.out.println("Checkout cancelled.");
+	        System.out.println();
 	    }
 	}
 

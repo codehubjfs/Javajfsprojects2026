@@ -106,7 +106,7 @@ public class CustomerDAO {
 
 	        if (rs.next()) {
 	            String updateSql =
-	                "update cart_items set quantity = quantity + ?,item_total = item_total + (? * ?) where cart_id=? and product_id=?";
+	                "update cart_item set quantity = quantity + ?,item_total = item_total + (? * ?) where cart_id=? and product_id=?";
 
 	            try (PreparedStatement ps = con.prepareStatement(updateSql)) {
 	                ps.setInt(1, quantity);
@@ -243,9 +243,8 @@ public class CustomerDAO {
             ArrayList<CartItem> items,
             double total)
             		throws DBAccessException {
-
 		String orderSql =
-				"insert into `order`(user_id, total_amount, status) values (?, ?, 'placed')";
+				"insert into `order`(user_id, total_amount, status, address_id) values (?, ?, 'placed', ?)";
 
 		String orderItemSql =
 				"insert into order_item(order_id, product_id, quantity, price, item_total) values (?, ?, ?, ?, ?)";
@@ -256,18 +255,21 @@ public class CustomerDAO {
 		String clearCartSql =
 				"delete from cart_item where cart_id = ?";
 
-		try (Connection con = DBUtil.getConnection()) {
+		try (Connection con = DBUtil.getConnection();
+				) {
+
 
 			con.setAutoCommit(false);
-
 			int userId = UserDAO.getUserIdByEmail(email);
 			int cartId = CustomerDAO.getOrCreateCart(email);
+			int addressId = UserDAO.getAddressIDByEmail(email);
 			
 			PreparedStatement orderPs =
 					con.prepareStatement(orderSql, Statement.RETURN_GENERATED_KEYS);
 
 			orderPs.setInt(1, userId);
 			orderPs.setDouble(2, total);
+			orderPs.setInt(3, addressId);
 			orderPs.executeUpdate();
 
 			ResultSet rs = orderPs.getGeneratedKeys();

@@ -30,7 +30,7 @@ public class AuthService {
 	
 	public static boolean registerCustomer(
 	        String name, String email, String password,
-	        String street, String city, String state, String pincode
+	        String street, String city, String state, String pincode, String address_type
 	) throws DBAccessException {
 
 	    // email already exists check
@@ -40,7 +40,7 @@ public class AuthService {
 
 	    return AuthDAO.registerCustomerWithAddress(
 	            name, email, password,
-	            street, city, state, pincode
+	            street, city, state, pincode, address_type
 	    );
 	}
 

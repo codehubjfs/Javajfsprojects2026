@@ -277,5 +277,25 @@ public class InputValidate {
 	        return input;
 	    }
 	}
+	
+	public static String AddressTypeValidation(Scanner s,String prompt) throws EmptyInputException,InputMismatchException{
+		while(true) {
+			System.out.println(prompt);
+			String input = s.nextLine().trim().toLowerCase();
+			if (input.isEmpty()) {
+	            throw new EmptyInputException("Pincode cannot be empty.");
+	        }
+			if(!input.equals("home") && !input.equals("office") && !input.equals("other")) {
+				throw new InputMismatchException("Please select a valid option: ");
+			}
+			
+			if(!input.matches("[A-Za-z ]+")) {
+				throw new InputMismatchException("Address Type cannot be a numeric value.");
+
+			}
+			
+			return input;
+		}
+	}
 
 }

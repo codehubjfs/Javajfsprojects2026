@@ -80,14 +80,14 @@ public class AuthDAO {
 
 	public static boolean registerCustomerWithAddress(
 	        String name, String email, String password,
-	        String street, String city, String state, String pincode
+	        String street, String city, String state, String pincode, String address_type
 	) throws DBAccessException {
 
 	    String userSql =
 	            "insert into user (name, email, password, role, status) values (?, ?, ?, 'customer', 'active')";
 
 	    String addressSql =
-	            "insert into address (user_id, street, city, state, zipcode, address_type) values (?, ?, ?, ?, ?, 'home')";
+	            "insert into address (user_id, street, city, state, zipcode, address_type) values (?, ?, ?, ?, ?, ?)";
 
 	    try (Connection con = DBUtil.getConnection()) {
 
@@ -119,6 +119,7 @@ public class AuthDAO {
 	                psAddress.setString(3, city);
 	                psAddress.setString(4, state);
 	                psAddress.setString(5, pincode);
+	                psAddress.setString(6, address_type);
 	                psAddress.executeUpdate();
 	            }
 	        }

@@ -11,10 +11,12 @@ import java.util.ArrayList;
 
 import Exceptions.DBAccessException;
 import Exceptions.EntityNotFoundException;
+import Model.CartItem;
 import Model.Category;
 import Model.Customer;
 import Model.Discount;
 import Model.Inventory;
+import Model.Order;
 import Model.Product;
 import Model.Ticket;
 import util.DBUtil;
@@ -75,7 +77,7 @@ public class AdminDAO {
 	public static void addCategory(String category_name,String description) throws DBAccessException {
 		String sql = "insert into category(category_name,description) values (?,?)";
 		try(Connection con = DBUtil.getConnection();
-				PreparedStatement ps = con.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)){
+				PreparedStatement ps = con.prepareStatement(sql)){
 			ps.setString(1, category_name);
 			ps.setString(2, description);
 			int rows = ps.executeUpdate();
@@ -154,12 +156,30 @@ public class AdminDAO {
 				throw new DBAccessException("Unable to modify Category.");
 			}
 		}
+		
+		
+//Query to check if Category is active and exists
+		public static boolean isCategoryActive(Connection con,int category_id) throws SQLException{
+			String sql = "select status from category where category_id = ?";
+			try(PreparedStatement ps = con.prepareStatement(sql)){
+				ps.setInt(1, category_id);
+				ResultSet rs = ps.executeQuery();
+				if(rs.next()) {
+					return "active".equalsIgnoreCase(rs.getString("status"));
+				}
+				return false;
+			}
+		}
 	
 //Query for Admin to add a new Product
 	public static void addProduct(int category_id,String name,String brand,String description,double price,String image_url) throws DBAccessException{
 		String sql1 = "insert into product(category_id,name,brand,description,price,image_url) values (?,?,?,?,?,?)";
 		String sql2 = "insert into inventory(product_id,stock_quantity) values (?,0)";
 		try(Connection con = DBUtil.getConnection()){
+			if(!isCategoryActive(con,category_id)) {
+				throw new DBAccessException("Category does not exist or is inactive");
+			}
+			con.setAutoCommit(false);
 			PreparedStatement ps = con.prepareStatement(sql1,Statement.RETURN_GENERATED_KEYS);
 			ps.setInt(1, category_id);
 			ps.setString(2, name);
@@ -178,6 +198,7 @@ public class AdminDAO {
 	        PreparedStatement ps2 = con.prepareStatement(sql2);
 	        ps2.setInt(1, productId);
 	        ps2.executeUpdate();
+	        con.commit();
 		}
 		catch(SQLException | IOException e) {
 			throw new DBAccessException("Unable to create Product.");
@@ -276,22 +297,40 @@ public class AdminDAO {
 		}
 	}
 	
-//Query for Admin to view all Orders
+//Query to view all orders
+	public static ArrayList<Order> viewOrders() throws DBAccessException{
+		ArrayList<Order> orders = new ArrayList<>();
+		String sql = "select o.order_id,o.user_id,u.name as username,o.order_date,o.status,o.total_amount,o.address_id from `order` o join user u on o.user_id = u.user_id order by o.order_date desc";
+		try(Connection con = DBUtil.getConnection();
+				Statement st = con.createStatement();
+				ResultSet rs = st.executeQuery(sql)) {
+			while(rs.next()) {
+				orders.add(new Order(rs.getInt("order_id"),rs.getInt("user_id"),rs.getString("username"),rs.getDouble("total_amount"),rs.getTimestamp("order_date").toLocalDateTime().toLocalDate(),rs.getString("status"),rs.getInt("address_id")));
+			}
+		}catch(SQLException | IOException e) {
+			throw new DBAccessException("Unable to fetch Orders");
+		}
+		return orders;
+	}
 	
-//	public static void viewOrders() throws DBAccessException{
-//		String sql = "select * from `order`";
-//		try(Connection con = DBUtil.getConnection();
-//				Statement st = con.createStatement();
-//				ResultSet rs = st.executeQuery(sql)){
-//			while(rs.next()) {
-//				System.out.println(rs.getInt("order_id") + " | " + rs.getInt("user_id") + " | " + 
-//						rs.getTimestamp("order_date") + " | " + rs.getString("status") + " | " + rs.getDouble("total_amount"));
-//			}
-//		}
-//		catch(SQLException | IOException e) {
-//			throw new DBAccessException("Unable to fetch Orders.");
-//		}
-//	}
+//Query to view order details
+	public static ArrayList<CartItem> viewOrderDetails(int orderId) throws DBAccessException{
+		ArrayList<CartItem> items = new ArrayList<>();
+		String sql = "select p.product_id,p.name,p.brand,oi.quantity,oi.price,oi.item_total from order_item oi join product p on oi.product_id = p.product_id where oi.order_id = ?";
+		try(Connection con = DBUtil.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)){
+			ps.setInt(1, orderId);
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				Product product = new Product(rs.getInt("product_id"),0,rs.getString("name"),rs.getString("brand"),rs.getDouble("price"),null,null,"active");
+				items.add(new CartItem(product,rs.getInt("quantity"),rs.getDouble("price"),rs.getDouble("item_total")));
+			}
+		}
+		catch(SQLException | IOException e) {
+			throw new DBAccessException("Unable to fetch order items.");
+		}
+		return items;
+	}
 	
 	
 //Query for Admin to view all Payments
@@ -353,10 +392,12 @@ public class AdminDAO {
 	public static ArrayList<Discount> viewDiscounts() throws DBAccessException{
 		// TODO Auto-generated method stub
 		ArrayList<Discount> discounts = new ArrayList<>();
-		String sql = "select * from discount";
+		String sql1 = "update discount set status = 'expired' where expiry_date < curdate() and status = 'active'";
+		String sql2 = "select * from discount";
 	    try (Connection con = DBUtil.getConnection();
-	         Statement st = con.createStatement();
-	         ResultSet rs = st.executeQuery(sql)) {
+	         Statement st = con.createStatement()){
+	         st.executeUpdate(sql1);
+	         ResultSet rs = st.executeQuery(sql2);
 	        while (rs.next()) {
 	        	discounts.add(new Discount(rs.getInt("discount_id"),rs.getString("promo_code"),rs.getDouble("discount_percentage"),rs.getDate("expiry_date")
 	        			,rs.getString("status")));
