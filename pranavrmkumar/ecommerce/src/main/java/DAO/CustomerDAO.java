@@ -239,9 +239,7 @@ public class CustomerDAO {
 
 	
 //to create an order/checkout
-	public static void createOrder(String email,
-            ArrayList<CartItem> items,
-            double total)
+	public static void createOrder(String email,ArrayList<CartItem> items,double total,int address_id)
             		throws DBAccessException {
 		String orderSql =
 				"insert into `order`(user_id, total_amount, status, address_id) values (?, ?, 'placed', ?)";
@@ -255,8 +253,7 @@ public class CustomerDAO {
 		String clearCartSql =
 				"delete from cart_item where cart_id = ?";
 
-		try (Connection con = DBUtil.getConnection();
-				) {
+		try (Connection con = DBUtil.getConnection()) {
 
 
 			con.setAutoCommit(false);

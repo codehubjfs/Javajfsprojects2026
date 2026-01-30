@@ -22,7 +22,6 @@ import Model.Ticket;
 import util.DBUtil;
 
 public class AdminDAO {
-	
 //Query for an Admin to view all customers
 	public static ArrayList<Customer> viewCustomers() throws DBAccessException {
 		ArrayList<Customer> customers = new ArrayList<>();

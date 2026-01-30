@@ -2,7 +2,6 @@ package ServiceLayer;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -12,6 +11,7 @@ import DAO.UserDAO;
 import Exceptions.DBAccessException;
 import Exceptions.EmptyInputException;
 import Exceptions.InputMismatchException;
+import Model.Address;
 import Model.CartItem;
 import Model.Customer;
 import Model.Order;
@@ -81,9 +81,13 @@ public class CustomerServices {
 	                    System.out.println("1. Ascending\n2. Descending");
 	                    int sortChoice = InputValidate.ChoiceValidation(s, 1, 2);
 	                    shownProducts = products.stream()
-	                            .sorted(sortChoice == 1
-	                                    ? Comparator.comparing(Product::getPrice)
-	                                    : Comparator.comparing(Product::getPrice).reversed())
+	                            .sorted((p1,p2) -> {
+	                            	if(sortChoice == 1) {
+	                            		return Double.compare(p1.getPrice(),p2.getPrice());
+	                            	}else {
+	                            		return Double.compare(p2.getPrice(), p1.getPrice());
+	                            	}
+	                            })
 	                            .collect(Collectors.toList());
 	                    break;
 
@@ -101,11 +105,7 @@ public class CustomerServices {
 
 	                if (ch == 'y' || ch == 'Y' || input.equalsIgnoreCase("yes")) {
 	                	int productId = InputValidate.IntValidation(s, "Enter Product ID:");
-	                	int qty = InputValidate.IntValidation(s, "Enter Quantity:");
-
-
-	                    addToCart(customer, productId, qty);
-	                    System.out.println("Product added to cart.\n");
+	                    addToCart(s,customer,productId);
 	                }
 	            }
 
@@ -138,23 +138,46 @@ public class CustomerServices {
     
     
 
-	public static void addToCart(Customer customer, int productId, int quantity)
-	        throws DBAccessException {
+    public static void addToCart(Scanner s,Customer customer, int productId)
+            throws DBAccessException {
 
-	    Product product = CustomerDAO.getProductById(productId);
+        Product product = CustomerDAO.getProductById(productId);
 
-	    if (product == null) {
-	        throw new DBAccessException("Product not found.");
-	    }
+        if (product == null) {
+            System.out.println("Product not Found");
+            return;
+        }
 
-	    int stock = CustomerDAO.getStock(productId);
-	    if (quantity > stock) {
-	        throw new DBAccessException("Only " + stock + " items available.");
-	    }
+        int stock = CustomerDAO.getStock(productId);
 
-	    int cartId = CustomerDAO.getOrCreateCart(customer.getEmail());
-	    CustomerDAO.addOrUpdateCartItem(cartId, product, quantity);
-	}
+        while (true) {
+            try {
+                System.out.print("Enter quantity (Available: " + stock + "): ");
+                int quantity = s.nextInt();
+                s.nextLine();
+
+                if (quantity <= 0) {
+                    System.out.println("Quantity must be greater than 0.");
+                    continue;
+                }
+
+                if (quantity > stock) {
+                    System.out.println("Only " + stock + " items available. Please enter again.");
+                    continue;
+                }
+
+                int cartId = CustomerDAO.getOrCreateCart(customer.getEmail());
+                CustomerDAO.addOrUpdateCartItem(cartId, product, quantity);
+                System.out.println("Item added to cart successfully!");
+                break;
+
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                s.nextLine();
+            }
+        }
+    }
+
 
     
     
@@ -168,6 +191,7 @@ public class CustomerServices {
 
 	    if (items.isEmpty()) {
 	        System.out.println("Cart is empty.");
+	        System.out.println();
 	        return;
 	    }
 
@@ -189,7 +213,7 @@ public class CustomerServices {
 
 	
 	
-	public static void checkout(Scanner s, Customer customer) throws DBAccessException {
+	public static void checkout(Scanner s, Customer customer) throws DBAccessException, EmptyInputException, InputMismatchException {
 
 	    int cartId = CustomerDAO.getOrCreateCart(customer.getEmail());
 	    ArrayList<CartItem> items = CustomerDAO.viewCart(cartId);
@@ -209,18 +233,30 @@ public class CustomerServices {
 	        total += item.getItemTotal();
 	    }
 	    
-	    String address = UserDAO.getAddressByEmail(customer.getEmail());
-	    
+	    List<Address> addresses = UserDAO.getAddressesByUserId(UserDAO.getUserIdByEmail(customer.getEmail()));
+	    if (addresses.isEmpty()) {
+	        System.out.println("No addresses found. Please add one in Profile Management.");
+	        return;
+	    }
+
+	    System.out.println("Select delivery address:");
+	    for (int i = 0; i < addresses.size(); i++) {
+	        Address a = addresses.get(i);
+	        System.out.println((i+1) + ". " + a.getStreet() + ", " + a.getCity() + ", " + a.getState() + " - " + a.getZipcode() + " (" + a.getAddress_type() + ")");
+	    }
+
+	    int choice = InputValidate.ChoiceValidation(s, 1, addresses.size());
+	    Address selected = addresses.get(choice-1);
+
+	    System.out.println("Order will be delivered to: " + selected.getStreet() + ", " + selected.getCity());
 	    System.out.println("Total Amount: ₹" + total);
-	    System.out.println("Order will be delivered to: ");
-	    System.out.println(address);
 	    System.out.println();
 	    System.out.print("Confirm checkout? (y/n): ");
 
 	    String input = s.nextLine().trim();
 
 	    if (input.equalsIgnoreCase("y") || input.equalsIgnoreCase("yes")) {
-	        placeOrder(customer, items, total);
+	        placeOrder(customer, items, total,selected.getAddress_id());
 	        System.out.println("Order placed successfully!");
 	        System.out.println();
 	    } else {
@@ -232,12 +268,10 @@ public class CustomerServices {
 
 	
 	
-	public static void placeOrder(Customer customer,
-            ArrayList<CartItem> items,
-            double total)
+	public static void placeOrder(Customer customer,ArrayList<CartItem> items,double total,int addressId)
             		throws DBAccessException {
 
-		CustomerDAO.createOrder(customer.getEmail(), items, total);
+		CustomerDAO.createOrder(customer.getEmail(), items, total,addressId);
 	}
 	
 	
@@ -260,6 +294,119 @@ public class CustomerServices {
 	    }
 	}
 
+	
+	public static void profileMenu(Scanner s,Customer customer) throws DBAccessException, EmptyInputException, InputMismatchException{
+		int choice;
+		do {
+			System.out.println("1.View Profile\n2.Edit Name\n3.Edit email\n4.Edit Password\n5.Manage Addresses\n6.Back");
+			choice = InputValidate.ChoiceValidation(s, 1, 6);
+			switch(choice) {
+			case 1:
+				System.out.println("Name: "+customer.getName() +"\nEmail: "+customer.getEmail());
+				break;
+			case 2:
+				String newName = InputValidate.NameValidation(s, "Enter new Name: ");
+				UserDAO.updateUserName(UserDAO.getUserIdByEmail(customer.getEmail()),newName);
+				System.out.println("Name updated successfully.");
+				break;
+				
+			case 3:
+				String newEmail = InputValidate.EmailValidation(s, "Enter new Email: ");
+				UserDAO.updateUserEmail(UserDAO.getUserIdByEmail(customer.getEmail()),newEmail);
+				customer = new Customer(customer.getName(),newEmail,customer.getPassword(),customer.getStatus());
+				System.out.println("Email update successfully.");
+				break;
+				
+			case 4:
+				String newPassword = InputValidate.PasswordValidation(s, "Enter new Password: ");
+				UserDAO.updateUserPassword(UserDAO.getUserIdByEmail(customer.getEmail()),newPassword);
+				System.out.println("Password updated successfully.");
+				break;
+				
+			case 5:
+				manageAddresses(s,customer);
+				break;
+				
+			case 6:
+				return;
+			}
+		}while(choice != 6);
+	}
 
+
+	private static void manageAddresses(Scanner s, Customer customer) throws DBAccessException, EmptyInputException, InputMismatchException{
+		// TODO Auto-generated method stub
+		int choice;
+		try {
+			int userId = UserDAO.getUserIdByEmail(customer.getEmail());
+		do {
+			System.out.println("1.View all addresses\n2.Add new Address\n3.Update existing Address\n4.Delete existing Address\n5.Back");
+			choice = InputValidate.ChoiceValidation(s, 1, 5);
+			switch(choice) {
+			case 1:
+				List<Address> addresses = UserDAO.getAddressesByUserId(userId); 
+				if (addresses.isEmpty()) { System.out.println("No addresses found."); 
+				} 
+				else { 
+					for (Address a : addresses) { 
+						System.out.println("ID: " + a.getAddress_id() + " | " + a.getStreet() + ", " + a.getCity() + ", " + a.getState() + " - " + a.getZipcode() + " (" + a.getAddress_type() + ")"); 
+					} 
+				} 
+				System.out.println(); 
+				break;
+				
+			case 2:
+				String street = InputValidate.AddressValidation(s, "Enter street: "); 
+				String city = InputValidate.AddressValidation(s, "Enter city: "); 
+				String state = InputValidate.AddressValidation(s, "Enter state: "); 
+				String zipcode = InputValidate.PincodeValidation(s, "Enter pincode: "); 
+				String type = InputValidate.AddressTypeValidation(s, "Enter type (home/office/other): "); 
+				UserDAO.addAddress(userId, street, city, state, zipcode, type); 
+				System.out.println("Address added successfully.\n"); 
+				break;
+				
+			case 3:
+				addresses = UserDAO.getAddressesByUserId(userId); 
+				if (addresses.isEmpty()) { 
+					System.out.println("No addresses to edit.\n"); 
+					break; 
+				} 
+				System.out.println("Select address ID to edit:"); 
+				for (Address a : addresses) { 
+					System.out.println(a.getAddress_id() + ": " + a.getStreet() + ", " + a.getCity()); 
+				} 
+				int addrId = InputValidate.IntValidation(s, "Enter address ID: "); 
+				street = InputValidate.AddressValidation(s, "Enter new street: "); 
+				city = InputValidate.AddressValidation(s, "Enter new city: "); 
+				state = InputValidate.AddressValidation(s, "Enter new state: "); 
+				zipcode = InputValidate.PincodeValidation(s, "Enter new pincode: "); 
+				type = InputValidate.AddressTypeValidation(s, "Enter new type (home/office/other): "); 
+				UserDAO.updateAddress(addrId, street, city, state, zipcode, type); 
+				System.out.println("Address updated successfully.\n"); 
+				break;
+				
+			case 4:
+				addresses = UserDAO.getAddressesByUserId(userId); 
+				if (addresses.isEmpty()) { 
+					System.out.println("No addresses to delete.\n"); 
+					break; 
+				} 
+				System.out.println("Select address ID to delete:"); 
+				for (Address a : addresses) { 
+					System.out.println(a.getAddress_id() + ": " + a.getStreet() + ", " + a.getCity()); 
+				} 
+				addrId = InputValidate.IntValidation(s, "Enter address ID: "); 
+				UserDAO.deleteAddress(addrId); 
+				System.out.println("Address deleted successfully.\n"); 
+				break;
+				
+			case 5:
+				return;
+			}
+		}while(choice != 5);
+		}catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
 
 }

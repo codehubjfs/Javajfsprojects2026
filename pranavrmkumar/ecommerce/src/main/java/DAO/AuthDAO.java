@@ -11,55 +11,41 @@ import Exceptions.DBAccessException;
 import Exceptions.InvalidCredentialsException;
 import Model.Admin;
 import Model.Customer;
+import Model.User;
 import util.DBUtil;
 
 public class AuthDAO {
 	
-	//admin login
-	public static Admin adminLogin(String email,String password) throws DBAccessException{
-		String sql = "select name,email,role from user where email = ? and password = ? and role = 'admin'";
-		try(Connection con = DBUtil.getConnection();
-				PreparedStatement ps = con.prepareStatement(sql)){
-			ps.setString(1, email);
-			ps.setString(2, password);
-			
-			ResultSet rs = ps.executeQuery();
-			
-			if(rs.next()) {
-				return new Admin(rs.getString("name"),rs.getString("email"),rs.getString("role"));
-			}
-			return null;
-		}catch(SQLException | IOException e) {
-			throw new DBAccessException("Database error during login");
-		}
+	public static User login(String email, String password) 
+	        throws DBAccessException, InvalidCredentialsException {
+	    String sql = "select name, email, role, status from user where email = ? and password = ?";
+	    try (Connection con = DBUtil.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+	        ps.setString(1, email);
+	        ps.setString(2, password);
+	        ResultSet rs = ps.executeQuery();
+	        
+	        if (!rs.next()) {
+	            throw new InvalidCredentialsException("Invalid email or password.");
+	        }
+	        
+	        String role = rs.getString("role");
+	        switch (role.toLowerCase()) {
+	            case "admin":
+	                return new Admin(rs.getString("name"), rs.getString("email"), role);
+	            case "customer":
+	                if ("inactive".equalsIgnoreCase(rs.getString("status"))) {
+	                    throw new InvalidCredentialsException("Account is blocked. Contact support.");
+	                }
+	                return new Customer(rs.getString("name"), rs.getString("email"), rs.getString("status"));
+	            default:
+	                throw new InvalidCredentialsException("Unknown role: " + role);
+	        }
+	    } catch (SQLException | IOException e) {
+	        throw new DBAccessException("Unable to login. Please try again later.");
+	    }
 	}
-	
-	
-	
-	public static Customer customerLogin(String email, String password)
-            throws DBAccessException, InvalidCredentialsException {
-        String sql = "select name, email, status from user where email = ? and password = ? and role = 'customer'";
-        try (Connection con = DBUtil.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, email);
-            ps.setString(2, password);
-            ResultSet rs = ps.executeQuery();
-            if (!rs.next()) {
-                throw new InvalidCredentialsException("Invalid email or password.");
-            }
-            if ("inactive".equalsIgnoreCase(rs.getString("status"))) {
-                throw new InvalidCredentialsException("Account is blocked. Contact support.");
-            }
-            return new Customer(
-                    rs.getString("name"),
-                    rs.getString("email"),
-                    rs.getString("status")
-            );
 
-        } catch (SQLException | IOException e) {
-            throw new DBAccessException("Unable to login. Please try again later.");
-        }
-	}
 	
 	
 	//new customer registration

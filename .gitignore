@@ -37,3 +37,6 @@ pranavrmkumar/ecommerce/target/classes/ServiceLayer/CustomerServices.class
 pranavrmkumar/ecommerce/target/classes/UI/Customer.class
 pranavrmkumar/ecommerce/target/classes/DAO/CustomerDAO$OrderData.class
 pranavrmkumar/ecommerce/target/classes/Model/Address.class
+pranavrmkumar/ecommerce/target/classes/UI/AdminMenu.class
+pranavrmkumar/ecommerce/target/classes/UI/CustomerMenu.class
+pranavrmkumar/ecommerce/target/classes/UI/Employee.class

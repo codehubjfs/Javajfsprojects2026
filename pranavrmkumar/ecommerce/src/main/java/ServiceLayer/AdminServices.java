@@ -77,6 +77,9 @@ public class AdminServices {
 				break;
 				
 			case 3:
+				AdminDAO.viewCategories().stream()
+				.forEach(c -> 
+						System.out.println("Category ID: " + c.getCategoryID() + " | " + "Category Name: " + c.getCategoryName() + " | " + "Description: " + c.getDescription() + " | " + "Status: " + c.getStatus()));
 				int c_id = InputValidate.IntValidation(s, "Please enter id of category to delete: ");
 				AdminDAO.deleteCategory(c_id);
 				System.out.println("Category is deleted.");
@@ -95,6 +98,9 @@ public class AdminServices {
 					switch(modify_choice){
 					
 					case 1:
+						AdminDAO.viewCategories().stream()
+						.forEach(c -> 
+								System.out.println("Category ID: " + c.getCategoryID() + " | " + "Category Name: " + c.getCategoryName() + " | " + "Description: " + c.getDescription() + " | " + "Status: " + c.getStatus()));
 						cat_id = InputValidate.IntValidation(s, "Please enter Category_id to modify: ");
 						String cat_name = InputValidate.StringValidation(s, "Please enter new Category name: ");
 						AdminDAO.modifyCategoryName(cat_name, cat_id);
@@ -102,6 +108,9 @@ public class AdminServices {
 						break;
 						
 					case 2:
+						AdminDAO.viewCategories().stream()
+						.forEach(c -> 
+								System.out.println("Category ID: " + c.getCategoryID() + " | " + "Category Name: " + c.getCategoryName() + " | " + "Description: " + c.getDescription() + " | " + "Status: " + c.getStatus()));
 						cat_id = InputValidate.IntValidation(s, "Please enter Category_id to modify: ");
 						String cat_desc = InputValidate.DescURLValidation(s, "Please enter new Category Description: ");
 						AdminDAO.modifyCategoryDesc(cat_desc, cat_id);
@@ -109,6 +118,9 @@ public class AdminServices {
 						break;
 						
 					case 3:
+						AdminDAO.viewCategories().stream()
+						.forEach(c -> 
+								System.out.println("Category ID: " + c.getCategoryID() + " | " + "Category Name: " + c.getCategoryName() + " | " + "Description: " + c.getDescription() + " | " + "Status: " + c.getStatus()));
 						cat_id = InputValidate.IntValidation(s, "Please enter Category_id to modify: ");
 						String cat_status = InputValidate.StringValidation(s, "Please enter new Category Status: ").toLowerCase();
 						while (!cat_status.equalsIgnoreCase("active") &&
@@ -155,6 +167,9 @@ public class AdminServices {
 			switch(choice) {
 			
 			case 1:
+				AdminDAO.viewCategories().stream()
+				.forEach(c -> 
+						System.out.println("Category ID: " + c.getCategoryID() + " | " + "Category Name: " + c.getCategoryName() + " | " + "Description: " + c.getDescription() + " | " + "Status: " + c.getStatus()));
 				int cat_id = InputValidate.IntValidation(s, "Please enter Category_id of Product: ");
 				String name = InputValidate.StringValidation(s, "Please enter the Product Name: ");
 				String brand = InputValidate.StringValidation(s, "Please enter the Product Brand: ");
@@ -167,12 +182,20 @@ public class AdminServices {
 				break;
 				
 			case 2:
+				AdminDAO.viewProducts().stream()
+				.forEach(p -> 
+						System.out.println("Product ID: " + p.getProductID() + " | " + "Category ID: " + p.getCategoryID() + " | " + "Product Name: " + p.getName() + " | " + "Brand: " + p.getBrand()
+						 + " | " + "Price: " + p.getPrice() + " | " + "Description: " + p.getDescription() + " | " + "Image: " + p.getURL() + " | " + "Status: " + p.getStatus()));
 				pid = InputValidate.IntValidation(s, "Please enter Product ID to delete: ");
 				AdminDAO.deleteProduct(pid);
 				System.out.println("Product deleted");
 				break;
 				
 			case 3:
+				AdminDAO.viewProducts().stream()
+				.forEach(p -> 
+						System.out.println("Product ID: " + p.getProductID() + " | " + "Category ID: " + p.getCategoryID() + " | " + "Product Name: " + p.getName() + " | " + "Brand: " + p.getBrand()
+						 + " | " + "Price: " + p.getPrice() + " | " + "Description: " + p.getDescription() + " | " + "Image: " + p.getURL() + " | " + "Status: " + p.getStatus()));
 				pid = InputValidate.IntValidation(s, "Please enter Product ID to update price: ");
 				double newPrice = InputValidate.DoubleValidation(s, "Please enter new Price: ", 1.0, 100000.0);
 				AdminDAO.modifyProductPrice(pid,newPrice);
@@ -218,6 +241,9 @@ public class AdminServices {
 				break;
 				
 			case 2:
+				AdminDAO.viewInventory().stream()
+				.forEach(i ->
+						System.out.println("Inventory ID: " + i.getInventoryID() + " | " + "Product ID: " + i.getProductID() + " | " + "Product Name: " + i.getPName() + " | " + "Stock Quantity: "+i.getQuantity()));
 				int pid = InputValidate.IntValidation(s, "Please enter Product ID to update stock: ");
 				
 				System.out.println();
@@ -269,6 +295,9 @@ public class AdminServices {
 			break;
 			
 		case 2:
+			AdminDAO.viewDiscounts().stream()
+			.forEach(d -> 
+			System.out.println("Discount ID: " + d.getDID() + " | " + "Promo Code: " + d.getCode() + " | " + "Discount Percentage: " + d.getDPT() + " | " + "Expiry Date: " +  d.getExpDate() + " | " + "Status: " + d.getStatus()));
 			int did = InputValidate.IntValidation(s, "Enter discount id: ");
 			AdminDAO.deleteDiscount(did);
 			System.out.println("Discount Deleted");
@@ -372,10 +401,10 @@ public class AdminServices {
 	                        for (CartItem item : items) {
 	                            System.out.println(
 	                                "Product: " + item.getProduct().getName() +
-	                                " | Brand: " + item.getProduct().getBrand() +
-	                                " | Qty: " + item.getQuantity() +
-	                                " | Price: ₹" + item.getPrice() +
-	                                " | Total: ₹" + item.getItemTotal()
+	                                "\nBrand: " + item.getProduct().getBrand() +
+	                                "\nQty: " + item.getQuantity() +
+	                                "\nPrice: ₹" + item.getPrice() +
+	                                "\nTotal: ₹" + item.getItemTotal()
 	                            );
 	                            total += item.getItemTotal();
 	                        }

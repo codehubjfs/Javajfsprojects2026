@@ -17,7 +17,7 @@ public class InputValidate {
 			}
 			
 			//number check
-			if(!input.matches("[0-9]+")) {
+			if(!input.matches("[0-9-]+")) {
 				throw new InputMismatchException("Input must be an Integer.");
 			}
 			
@@ -50,7 +50,7 @@ public class InputValidate {
 			}
 			
 			//number check
-			if(!input.matches("[0-9]+")) {
+			if(!input.matches("[0-9-]+")) {
 				throw new InputMismatchException("Input must be an Integer.");
 			}
 			

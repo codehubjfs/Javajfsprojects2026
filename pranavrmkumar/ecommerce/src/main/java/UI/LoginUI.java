@@ -9,101 +9,87 @@ import Exceptions.InputMismatchException;
 import Exceptions.InvalidCredentialsException;
 import ServiceLayer.AuthService;
 import util.InputValidate;
-
+ class Employee{
+	 String name;
+	 int age;
+	 public static boolean hashcodeEquals(Object o1,Object o2) {
+		 if(o1.hashCode() == (o2.hashCode())) {
+			 return true;
+		 }
+		 else {
+			 return false;
+		 }
+	 }
+	public Employee(String name,int age) {
+		this.name = name;
+		this.age = age;
+	}
+}
 public class LoginUI {
 	public static void main(String[] args) {
 		Scanner s = new Scanner(System.in);
 		int choice = -1;
-		System.out.println("-------------------------Main Menu--------------------------");
+		System.out.println("---------------------------------------------------------------");
+		System.out.println("-----------------------Ecommerce System------------------------");
+		System.out.println("---------------------------------------------------------------");
 		
 		do {
 			try {
-				System.out.println("1.Login as Customer");
-				System.out.println("2.Login as Admin");
-				System.out.println("3.Register as a new Customer");
-				System.out.println("4.Exit");
+				System.out.println("1.Login");
+				System.out.println("2.Register as a new Customer");
+				System.out.println("3.Exit");
 				System.out.print("Please enter your choice: ");
 				
-				choice = InputValidate.ChoiceValidation(s, 1, 4);
+				choice = InputValidate.ChoiceValidation(s, 1, 3);
 				System.out.println();
 				
 				switch(choice) {
 				
-				case 1:
-					int attempts = 0;
-					boolean loginSuccess = false;
-					while(attempts < 3) {
-						try {
-							String email = InputValidate.EmailValidation(s, "Enter Customer email: ");
-							String password = InputValidate.PasswordValidation(s, "Enter Customer password: ");
-							Model.Customer customer = AuthService.customerLogin(email, password);
-							System.out.println("\nLogin Successful.");
-							Customer.customerMenu(s,customer);
-							loginSuccess = true;
-							break;
-					}catch(InvalidCredentialsException e) {
-						attempts++;
-						System.out.println(e.getMessage());
-						System.out.println("Please try Again. (" + (3-attempts) + " remaining)");
-						System.out.println();
-					}catch(EmptyInputException | InputMismatchException e) {
-						System.out.println(e.getMessage());
-						System.out.println();
-					}catch(DBAccessException e) {
-						System.out.println("Error: "+e.getMessage());
-						break;
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						System.out.println(e.getMessage());
-						System.out.println();
-					}
-				}
-				if(attempts >= 3 && !loginSuccess) {
-					System.out.println("More than 3 attempts.Returning to Main Menu.");
-					System.out.println();
-				}
-				break;
-				
-				
-				case 2:
-					int adminAttempts = 0;
-					boolean adminLoginSuccess = false;
-					while(adminAttempts < 3) {
-						try {
-							String email = InputValidate.EmailValidation(s, "Enter admin email: ");
-							String password = InputValidate.PasswordValidation(s, "Enter admin password: ");
-							Model.Admin admin = AuthService.adminLogin(email, password);
-							System.out.println();
-							System.out.println("Login Successful.Welcome "+admin.getName());
-							System.out.println();
-							
-							Admin.menu(s);
-							adminLoginSuccess = true;
-							break;
-						}catch(InvalidCredentialsException e) {
-							adminAttempts++;
-							System.out.println(e.getMessage());
-							System.out.println("Please try Again. (" + (3-adminAttempts) + " remaining).");
-							System.out.println();
-						}catch(EmptyInputException | InputMismatchException e) {
-							System.out.println(e.getMessage());
-							System.out.println();
-						}catch(DBAccessException e) {
-							System.out.println("Error: "+e.getMessage());
-							return;
-						} catch (Exception e) {
+				case 1: // Login
+				    int attempts = 0;
+				    boolean loginSuccess = false;
+				    while (attempts < 3) {
+				        try {
+				            String email = InputValidate.EmailValidation(s, "Enter email: ");
+				            String password = InputValidate.PasswordValidation(s, "Enter password: ");
+				            
+				            Model.User user = AuthService.login(email, password); 
+				            
+				            System.out.println("\nLogin Successful.");
+				            System.out.println("Welcome " + user.getName());
+				            
+				            if ("admin".equalsIgnoreCase(user.getRole())) {
+				                AdminMenu.menu(s);
+				            } else if ("customer".equalsIgnoreCase(user.getRole())) {
+				                CustomerMenu.customerMenu(s, (Model.Customer) user);
+				            }
+				            
+				            loginSuccess = true;
+				            break;
+				        } catch (InvalidCredentialsException e) {
+				            attempts++;
+				            System.out.println(e.getMessage());
+				            System.out.println("Please try Again. (" + (3 - attempts) + " remaining)");
+				            System.out.println();
+				        } catch (EmptyInputException | InputMismatchException e) {
+				            System.out.println(e.getMessage());
+				            System.out.println();
+				        } catch (DBAccessException e) {
+				            System.out.println("Error: " + e.getMessage());
+				            break;
+				        } catch (Exception e) {
 							// TODO Auto-generated catch block
-							System.out.println(e.getMessage());
-							System.out.println();
+							e.printStackTrace();
 						}
-					}
-					if(adminAttempts >= 3 && !adminLoginSuccess) {
-						System.out.println("More than 3 attempts.Returning to Main Menu.");
-						System.out.println();
-					}
-					break;
+				    }
+				    if (attempts >= 3 && !loginSuccess) {
+				        System.out.println("More than 3 attempts. Returning to Main Menu.");
+				        System.out.println();
+				    }
+				    break;
+
 					
-				case 3:
+				case 2:
 				    System.out.println("------ Customer Registration ------");
 
 				    String name = null;
@@ -203,7 +189,7 @@ public class LoginUI {
 				    break;
 
 					
-				case 4:
+				case 3:
 					System.out.println("Thank You!");
 					s.close();
 					break;
@@ -212,7 +198,7 @@ public class LoginUI {
 					System.out.println(e.getMessage());
 					System.out.println();
 				}
-			}while(choice != 4);
+			}while(choice != 3);
 		
 		}
 }

@@ -17,7 +17,7 @@ public class Category {
 		return category_id;
 	}
 	
-	public String getCategoryName() {
+	public String getCategoryName() { 
 		return category_name;
 	}
 	

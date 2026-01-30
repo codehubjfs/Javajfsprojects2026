@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class DBUtil {
+
     public static Connection getConnection() throws SQLException, IOException {
     	//Class.forName("com.mysql.cj.jdbc.Driver");
         Properties props = new Properties();
@@ -23,6 +24,8 @@ public class DBUtil {
                 props.getProperty("db.username"),
                 props.getProperty("db.password")
         );
+        
+        
     }
 }
 
