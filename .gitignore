@@ -1,3 +1,4 @@
 maheshr/vehicle-service-console/src/main/resources/application.properties-local
 /target/
 /bin/
+maheshr/vehicle-service-management_V2/src/main/resources/application.properties-local

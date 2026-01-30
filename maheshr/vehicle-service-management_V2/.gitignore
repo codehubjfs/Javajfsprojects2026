@@ -1,0 +1,3 @@
+/bin/
+/target/
+/vehicle-service-console/src/main/resources/application.properties-local
