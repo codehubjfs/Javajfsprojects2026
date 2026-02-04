@@ -17,8 +17,11 @@ public class Offer {
         this.startDate = startDate;
         this.endDate = endDate;
     }
- 
-    public String getTitle() {
+
+    /**
+	 * getter functions
+     */
+	public String getTitle() {
         return title;
     }
 

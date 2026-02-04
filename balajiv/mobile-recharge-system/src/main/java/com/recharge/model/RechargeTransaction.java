@@ -13,10 +13,6 @@ public class RechargeTransaction {
 	private LocalDateTime initiatedAt;
 	private LocalDateTime completedAt;
 	
-	 
-	public RechargeTransaction() {
-		
-	}
 	
 	public RechargeTransaction(int userId, int connectionId, int planId, double finalAmount) {
 		this.userId = userId;
@@ -25,6 +21,10 @@ public class RechargeTransaction {
 		this.finalAmount = finalAmount;
 		this.status = "INITIATED";
 	}
+	
+	/*
+	 * Getter Functions
+	 */
 	
 	public int getRechargeId() {
 		return rechargeId;

@@ -11,10 +11,11 @@ public class PlanUpdationHistoryDAO {
 	private static final String INSERT_HISTORY = 
 			"""
 			insert into plan_updation_history
-			(plan_id, old_price, new_price, changed_by)
+			(plan_id, old_price, new_price, changed_by, changed_at)
 			values(?, ?, ?, ?, now())
 			""";
 	
+	// it records plan price in plan_updation_history table
 	public void recordPriceChange(int planId, double oldPrice, double newPrice, int adminUserId) {
 		try {
 			Connection conn = DBConnection.getConnection();

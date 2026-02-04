@@ -3,68 +3,59 @@ package com.recharge.service;
 import com.recharge.dao.PaymentDAO;
 import com.recharge.dao.RechargeTransactionDAO;
 import com.recharge.model.Payment;
+import com.recharge.util.TransactionRefUtil;
 
 
 public class PaymentService {
 
 	private final PaymentDAO paymentDAO = new PaymentDAO();
 	private final RechargeTransactionDAO rechargeDAO = new RechargeTransactionDAO();
-	private final PaymentMode paymentMode = PaymentMode.ALWAYS_SUCCESS;
+	private final PaymentMode paymentMode = PaymentMode.FAIL_ONCE_THEN_SUCCESS; // always payment success
 	
-	public boolean attemptPayment(int rechargeId, double amount) {
+	/**
+	 * used to attempt payment 
+	 * @param rechargeId
+	 * @param amount
+	 * @param paymentMethod
+	 * @return
+	 */
+	public boolean attemptPayment(int rechargeId, double amount, String paymentMethod) {
 		
-		rechargeDAO.updateStatus(rechargeId, "PAYMENT_IN_PROGRESS");
 		int attemptNumber = paymentDAO.getNextAttemptNumber(rechargeId);
 		
-		// simulate payment result
+		// enforce retry limit
+		if(attemptNumber > 2) {
+			rechargeDAO.updateStatus(rechargeId, "FAILED");
+			throw new RuntimeException("Maximum payment attempts exceeded");
+		}
+		
+		rechargeDAO.updateStatus(rechargeId, "PAYMENT_IN_PROGRESS");
+		
 		boolean success;
 		switch(paymentMode) {
-			case ALWAYS_SUCCESS:
-		        success = true;
-		        break;
-	
-		    case ALWAYS_FAIL:
-		        success = false;
-		        break;
-	
-		    case FAIL_ONCE_THEN_SUCCESS:
-		        success = attemptNumber > 1;
-		        break;
-	
-		    default:
-		        success = false;
+			case ALWAYS_SUCCESS -> success = true;
+			case ALWAYS_FAIL -> success = false;
+	        case FAIL_ONCE_THEN_SUCCESS -> success = attemptNumber > 1;
+	        default -> success = false;
 		}
 		
-		String status;
-		if(success) {
-			status = "SUCCESS";
-		}
-		else {
-			status = "FAILED";
-		}
+		String txnRef = TransactionRefUtil.generate();
 		
-		String failureReason;
-		if(success) {
-			failureReason = null;
-		}
-		else {
-			failureReason = "Simulated payment is failure";
-		}
+		Payment payment = new Payment(rechargeId, paymentMethod, amount, success ? "SUCCESS" : "FAILED",
+				txnRef, attemptNumber, success ? null : "Simulated failure");
 		
-		// record payment attempt
-		Payment payment = new Payment(rechargeId, "UPI", amount, status, attemptNumber, failureReason);
 		paymentDAO.recordPayment(payment);
 		
-		
-		//update recharge status
 		if(success) {
 			rechargeDAO.updateStatus(rechargeId, "SUCCESS");
 			return true;
 		}
-		else {
+		
+		//attempt failed
+		if(attemptNumber == 2) {
 			rechargeDAO.updateStatus(rechargeId, "FAILED");
-			return false;
 		}
-	}
-	
+		
+		return false;
+	}	
 }

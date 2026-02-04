@@ -11,11 +11,17 @@ import com.recharge.model.RechargeInvoice;
 
 public class RechargeInvoiceDAO {
 	
+	// query used to insert invoice after successful recharge
 	private static final String INSERT_INVOICE = 
 			"""
 			insert into recharge_invoice(recharge_id, generated_at, invoice_url)
 			values(?, now(), ?)
 			""";
+	
+	/**
+	 * used to create the invoice for successful recharge.
+	 * @param invoice
+	 */
 	
 	public void createInvoice(RechargeInvoice invoice) {
 		
@@ -32,6 +38,11 @@ public class RechargeInvoiceDAO {
 			throw new RuntimeException("Failed to generate the invoice");
 		}
 	}
+	
+	/**
+	 * used to get all invoices
+	 * @return
+	 */
 	
 	public List<String> findAllInvoices() {
 

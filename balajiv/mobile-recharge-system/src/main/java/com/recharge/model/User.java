@@ -13,9 +13,6 @@ public class User {
 	private String status;
 	private LocalDateTime createdAt;
 	
-	public User() {
-		
-	}
 	
 	public User(int userId, String fullName, String gender, String email, String passwordHash,
 			Role role, String status, LocalDateTime createdAt) {
@@ -28,6 +25,10 @@ public class User {
 		this.status = status;
 		this.createdAt = createdAt;
 	}
+	
+	/*
+	 * Getter Functions
+	 */
 	
 	public int getUserId() {
 		return userId;

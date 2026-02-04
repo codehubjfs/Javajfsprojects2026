@@ -8,6 +8,7 @@ public class AdminOperatorService {
 	private final OperatorDAO operatorDAO = new OperatorDAO();
 	private final AuditLogDAO auditLogDAO = new AuditLogDAO();
 	
+	// add operator to the DB
 	public void addOperator(String operatorName, int adminUserId) {
 		
 		if(operatorDAO.operatorExists(operatorName)) {
@@ -20,18 +21,21 @@ public class AdminOperatorService {
 		System.out.println("Operator added successfully");
 	}
 	
-	public void changeOperatorStatus(int operatorId, String newStatus, int adminUserId) {
-		
-		String currentStatus = operatorDAO.getOperatorStatus(operatorId);
-		
-		if(currentStatus.equalsIgnoreCase(newStatus)) {
-			throw new RuntimeException("Operator already in "+newStatus+" state");
-		}
-		
-		operatorDAO.updateOperatorStatus(operatorId, newStatus);
-		
-		auditLogDAO.log(adminUserId, "OPERATOR", operatorId, newStatus.equals("ACTIVE") ? "ACTIVATE" : "DEACTIVATE", currentStatus, newStatus);
-		
-		System.out.println("Operator status updated");
-	}
+	// change operator status active or inactive
+	public void changeOperatorStatusByName(String operatorName, String newStatus,int adminUserId) {
+
+        int operatorId = operatorDAO.getOperatorIdByName(operatorName);
+        String currentStatus = operatorDAO.getOperatorStatus(operatorId);
+
+        if (currentStatus.equalsIgnoreCase(newStatus)) {
+            throw new RuntimeException("Operator already in " + newStatus + " state");
+        }
+
+        operatorDAO.updateOperatorStatus(operatorId, newStatus);
+
+        auditLogDAO.log(adminUserId,"OPERATOR",operatorId,newStatus.equalsIgnoreCase("ACTIVE") ? "ACTIVATE" : "DEACTIVATE",
+        		currentStatus,newStatus);
+
+        System.out.println("Operator status updated");
+    }
 }

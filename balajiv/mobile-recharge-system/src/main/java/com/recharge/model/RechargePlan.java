@@ -23,6 +23,9 @@ public class RechargePlan {
 		this.planType = planType;
 	}
 	
+	/*
+	 * Getter Functions
+	 */
 	public int getOperatorId() {
         return operatorId;
     }

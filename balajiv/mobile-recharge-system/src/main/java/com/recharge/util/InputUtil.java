@@ -7,7 +7,7 @@ public class InputUtil {
 	private static final Scanner sc = new Scanner(System.in);
 	
 	private InputUtil() {
-		
+		// prevent instantiation
 	}
 	
 	// used to verify the input value strictly as integer only.
@@ -18,7 +18,7 @@ public class InputUtil {
 				return Integer.parseInt(sc.nextLine().trim());
 			}
 			catch(NumberFormatException e) {
-				System.out.println("Invalid number. enter the int value correctly.");
+				System.out.println("Invalid choice. enter the int value correctly.");
 			}
 		}
 	}
@@ -28,10 +28,15 @@ public class InputUtil {
 		while(true) {
 			try {
 				System.out.println(message+" ");
-				return Double.parseDouble(sc.nextLine().trim());
+				double value = Double.parseDouble(sc.nextLine().trim()); 
+				if (value < 0) {
+					System.out.println("Amount cannot be negative. Please enter a positive value.");
+					continue; 
+				}
+				return value;
 			}
 			catch(NumberFormatException e) {
-				System.out.println("Invalid number. enter the double value correctly.");
+				System.out.println("Invalid amount. enter the double value correctly.");
 			}
 		}
 	}
@@ -44,7 +49,7 @@ public class InputUtil {
 				return value;
 			}
 			System.out.println("Please enter a value between "+min+ " and "+max);
-			
+			 
 		}
 	}
 	

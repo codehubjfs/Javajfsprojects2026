@@ -10,6 +10,11 @@ public class PostRechargeService {
 	private final RechargeInvoiceDAO invoiceDAO = new RechargeInvoiceDAO();
 	private final NotificationDAO notificationDAO = new NotificationDAO();
 	
+	/**
+	 * used to handle successful recharge 
+	 * @param rechargeId
+	 * @param userId
+	 */
 	public void handleSuccessfulRecharge(int rechargeId, int userId) {
 		
 		//generate invoice

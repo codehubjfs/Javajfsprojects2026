@@ -8,11 +8,17 @@ import com.recharge.model.Notification;
 
 public class NotificationDAO {
 	
+	// query used to insert notification
 	private static final String INSERT_NOTIFICATION =
 			"""
 			insert into notification(user_id, type, message, sent_at)
 			values(?, ?, ?, now())
 			""";
+	
+	/**
+	 * used to create the notification
+	 * @param notification
+	 */
 	
 	public void createNotification(Notification notification) {
 		

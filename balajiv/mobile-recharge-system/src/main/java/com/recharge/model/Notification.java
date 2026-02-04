@@ -16,6 +16,9 @@ public class Notification {
 		this.message = message;
 	}
 	
+	/*
+	 * Getters functions
+	 */
 	public int getUserId() {
 		return userId;
 	}
@@ -26,6 +29,14 @@ public class Notification {
 	
 	public String getMessage() {
 		return message;
+	}
+	
+	public int getNotificationId() {
+		return notificationId;
+	}
+	
+	public LocalDateTime getSendAt() {
+		return sendAt;
 	}
 }
 

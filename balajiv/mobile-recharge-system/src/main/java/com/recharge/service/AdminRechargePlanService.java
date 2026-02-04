@@ -8,15 +8,16 @@ import com.recharge.model.RechargePlan;
 
 public class AdminRechargePlanService {
 
-	RechargePlanDAO planDAO = new RechargePlanDAO();
-	PlanUpdationHistoryDAO historyDAO = new PlanUpdationHistoryDAO();
-	AuditLogDAO auditDAO = new AuditLogDAO();
-	OperatorDAO operator = new OperatorDAO();
+	private final RechargePlanDAO planDAO = new RechargePlanDAO();
+	private final PlanUpdationHistoryDAO historyDAO = new PlanUpdationHistoryDAO();
+	private final AuditLogDAO auditDAO = new AuditLogDAO();
+	private final OperatorDAO operator = new OperatorDAO();
 
 	
+	// used to create the recharge plan
 	public void createPlan(RechargePlan plan, int adminUserId) {
 		
-		if(operator.getOperatorStatus(plan.getOperatorId()) == "ACTIVE") {	
+		if(operator.getOperatorStatus(plan.getOperatorId()).equalsIgnoreCase("ACTIVE")) {	
 			
 			int planId = planDAO.createPlan(plan);
 			
@@ -29,15 +30,42 @@ public class AdminRechargePlanService {
 		}
     }
 	
-	public void updatePlanPrice(int planId, double newPrice, int adminUserId) {
+	// create recharge plan using operator name
+	public void createPlanByOperatorName(String operatorName, RechargePlan planInput, int adminUserId) {
 
-        double oldPrice = planDAO.getPlanPrice(planId);
+	    int operatorId = operator.getOperatorIdByName(operatorName);
+
+	    String operatorStatus = operator.getOperatorStatus(operatorId);
+	    if (!operatorStatus.equalsIgnoreCase("ACTIVE")) {
+	        throw new RuntimeException("You can't create the recharge plan for INACTIVE operators");
+	    }
+
+	    // Create a NEW valid domain object
+	    RechargePlan plan = new RechargePlan(operatorId, planInput.getPlanName(), planInput.getPrice(), planInput.getValidityDays(),
+				planInput.getDataBenefits(), planInput.getCallBenefits(), planInput.getSmsBenefits(),planInput.getPlanType());
+
+	    int planId = planDAO.createPlan(plan);
+
+	    auditDAO.log(adminUserId,"RECHARGE_PLAN",planId,"CREATE",null,plan.getPlanName());
+
+	    System.out.println("Recharge plan created successfully");
+	}
+
+
+	
+	// used to update the plan price
+	public void updatePlanPrice(String planName, double newPrice, int adminUserId) {
+
+        double oldPrice = planDAO.getPlanPrice(planName);
 
         if (Double.compare(oldPrice, newPrice) == 0) {
             throw new RuntimeException("Price is already same");
         }
 
-        planDAO.updatePlanPrice(planId, newPrice);
+        planDAO.updatePlanPrice(planName, newPrice);
+        
+        int planId = planDAO.getPlanIdByName(planName);
+        
         historyDAO.recordPriceChange(planId, oldPrice, newPrice, adminUserId);
 
         auditDAO.log(adminUserId, "RECHARGE_PLAN", planId, "PRICE_UPDATE", String.valueOf(oldPrice), 
@@ -46,11 +74,14 @@ public class AdminRechargePlanService {
         System.out.println("Plan price updated successfully");
     }
 	
-	public void changePlanStatus(int planId, boolean active, int adminUserId) {
+	// used to change the plan status from active or deactive
+	public void changePlanStatus(String planName, boolean active, int adminUserId) {
 
-        planDAO.updatePlanStatus(planId, active);
+        planDAO.updatePlanStatus(planName, active);
+        
+        int planId = planDAO.getPlanIdByName(planName);
 
-        auditDAO.log(adminUserId, "RECHARGE_PLAN", planId,active ? "ACTIVATE" : "DEACTIVATE", null, 
+        auditDAO.log(adminUserId, "RECHARGE_PLAN", planId, active ? "ACTIVATE" : "DEACTIVATE", null, 
         		String.valueOf(active));
 
         System.out.println("Plan status updated");

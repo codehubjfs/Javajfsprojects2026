@@ -6,6 +6,7 @@ public class PasswordUtil {
 	
 	public static String hashPassword(String password) {
 		try {
+			// initialize message digest 
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
 			byte[] hashed = md.digest(password.getBytes());
 			
@@ -19,5 +20,6 @@ public class PasswordUtil {
 		catch(Exception e) {
 			throw new RuntimeException("Password hashing failed", e);
 		}
+
 	}
 }

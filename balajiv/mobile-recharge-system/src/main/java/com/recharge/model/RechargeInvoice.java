@@ -15,6 +15,9 @@ public class RechargeInvoice {
 		this.invoiceUrl = invoiceUrl;
 	}
 	
+	/*
+	 * Getter Functions
+	 */
 	public int getRechargeId() {
 		return rechargeId;
 	}
@@ -23,4 +26,11 @@ public class RechargeInvoice {
 		return invoiceUrl;
 	}
 	
+	public int getInvoiceId() {
+		return invoiceId;
+	}
+	
+	public LocalDateTime getGeneratedAt() {
+		return generatedAt;
+	}
 }
